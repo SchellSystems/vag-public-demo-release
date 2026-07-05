@@ -9,6 +9,14 @@ interface EvidencePanelProps {
 export function EvidencePanel({ evidence }: EvidencePanelProps) {
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(evidence, null, 2);
+  const summary = [
+    evidence.health?.status === 'ok' ? 'Health check passed' : 'Health check incomplete',
+    evidence.allow_run?.decision === 'allow' ? 'Proposal allowed' : null,
+    evidence.commit?.status === 'committed' ? 'Commit recorded' : null,
+    evidence.verify?.integrity ? 'Commit verified' : null,
+    evidence.deny_run?.decision === 'deny' ? 'Deny issued' : null,
+    evidence.negative_evidence?.denied ? 'Negative evidence recorded for bounded deny path' : null,
+  ].filter(Boolean);
 
   async function handleCopy() {
     const ok = await copyToClipboard(json);
@@ -20,6 +28,18 @@ export function EvidencePanel({ evidence }: EvidencePanelProps) {
 
   return (
     <section style={{ marginTop: 24 }}>
+      <h3>Evidence Summary</h3>
+      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+        <p style={{ margin: '0 0 8px', fontWeight: 700 }}>Path result: {evidence.path_result}</p>
+        <p style={{ margin: '0 0 8px' }}>
+          Full demo: {String(evidence.full_demo_passed)} | Deny path: {String(evidence.deny_path_passed)}
+        </p>
+        <ul style={{ margin: 0, paddingLeft: 20 }}>
+          {summary.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
       <h3>Evidence JSON</h3>
       <div style={{ position: 'relative' }}>
         <button

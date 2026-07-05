@@ -30,7 +30,7 @@ Demonstrates bounded behavior.
 Supports addon/browser/cartography context.
 
 ### vag-public-demo
-Curated private quarantine documentation/demo surface.
+Bounded public demo documentation/runtime surface.
 
 ## Forbidden Authority Collapses
 

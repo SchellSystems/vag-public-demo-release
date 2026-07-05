@@ -17,7 +17,7 @@ export function buildEvidence(params: {
 }): DemoEvidence {
   const { health, allowRun, commit, verify, denyRun, artifacts, negativeEvidence } = params;
 
-  const demoPassed =
+  const fullDemoPassed =
     health !== null &&
     health.status === 'ok' &&
     allowRun !== null &&
@@ -34,6 +34,9 @@ export function buildEvidence(params: {
     verify.status === 'verified' &&
     verify.valid === true &&
     verify.integrity === true &&
+    verify.hash_integrity === true &&
+    verify.signature_integrity === true &&
+    verify.reference_integrity === true &&
     verify.record_hash === commit.record_hash &&
     verify.decision_id === allowRun.decision_id &&
     denyRun !== null &&
@@ -45,6 +48,28 @@ export function buildEvidence(params: {
     negativeEvidence.no_commit === true &&
     negativeEvidence.no_verify === true;
 
+  const denyPathPassed =
+    health !== null &&
+    health.status === 'ok' &&
+    allowRun === null &&
+    commit === null &&
+    verify === null &&
+    artifacts === null &&
+    denyRun !== null &&
+    denyRun.decision === 'deny' &&
+    denyRun.allowed === false &&
+    negativeEvidence !== null &&
+    negativeEvidence.denied === true &&
+    negativeEvidence.no_tool_grant === true &&
+    negativeEvidence.no_commit === true &&
+    negativeEvidence.no_verify === true;
+
+  const pathResult = fullDemoPassed
+    ? 'full_demo_passed'
+    : denyPathPassed
+      ? 'deny_path_passed'
+      : 'incomplete';
+
   return {
     health,
     allow_run: allowRun,
@@ -53,7 +78,10 @@ export function buildEvidence(params: {
     deny_run: denyRun,
     bounded_demo_artifacts: artifacts,
     negative_evidence: negativeEvidence,
-    demo_passed: demoPassed,
+    path_result: pathResult,
+    full_demo_passed: fullDemoPassed,
+    deny_path_passed: denyPathPassed,
+    demo_passed: fullDemoPassed,
     truth_surface: 'bounded local demo gateway path',
     truth_boundaries: [
       'local gateway only',
@@ -65,7 +93,7 @@ export function buildEvidence(params: {
     ],
     non_claims: NON_CLAIMS,
     source: 'vag-public-demo local gateway run',
-    truth_status: demoPassed ? 'bounded_demo_complete' : 'incomplete',
+    truth_status: fullDemoPassed ? 'bounded_demo_complete' : denyPathPassed ? 'bounded_deny_path_complete' : 'incomplete',
     negative_evidence_scope: 'bounded_demo_path_only',
     negative_evidence_source: 'ui_derived_from_gateway_deny',
     deny_non_claim: 'does_not_prove_system_wide_non_execution',

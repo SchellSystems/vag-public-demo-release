@@ -33,10 +33,5 @@ jobs:
       - name: Build demo-ui
         run: npm run build
 
-      - name: Start gateway and run probe
-        run: |
-          node demo-gateway/src/server.mjs &
-          GATEWAY_PID=$!
-          trap "kill $GATEWAY_PID || true" EXIT
-          sleep 2
-          npm run probe:public
+      - name: Run gateway smoke test
+        run: npm run smoke

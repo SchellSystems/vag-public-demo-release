@@ -52,11 +52,10 @@ npm run probe:public
 The gateway smoke test starts the gateway, runs the probe, and verifies end-to-end gateway behavior:
 
 ```bash
-node tools/gateway_smoke.mjs
+npm run smoke
 ```
 
-> **Note:** Gateway smoke is a local validation procedure. It is not included in CI
-> because the probe step already covers gateway validation. Run it manually before submitting changes.
+> **Note:** Gateway smoke is the CI-aligned local validation procedure. It starts the gateway before running the probe.
 
 ## Validation Checklist
 
@@ -67,7 +66,7 @@ python tools/check_claims.py .
 python tools/export_audit.py .
 npm ci
 npm run build
-npm run probe:public
+npm run smoke
 git diff --check
 ```
 

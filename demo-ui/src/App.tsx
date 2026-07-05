@@ -8,21 +8,68 @@ import { GATEWAY_URL, DEMO_MODE, NON_CLAIMS } from './constants';
 import { checkHealth, proposeAllow, proposeDeny, commitProposal, verifyRecord } from './services/gateway';
 import { buildEvidence } from './services/evidence';
 import { createHash } from './utils/hash';
-import type { DemoEvidence, DemoPhase } from './types';
+import type { DemoEvidence, DemoPhase, FlowStep } from './types';
+
+const INITIAL_FLOW: FlowStep[] = [
+  { label: 'Proposal', status: 'pending' },
+  { label: 'Gateway Decision', status: 'pending' },
+  { label: 'Bounded Artifact', status: 'pending' },
+  { label: 'Commit', status: 'pending' },
+  { label: 'Verify', status: 'pending' },
+  { label: 'Evidence', status: 'pending' },
+];
+
+function DemoFlow({ steps }: { steps: FlowStep[] }) {
+  const colors: Record<FlowStep['status'], string> = {
+    pending: '#cbd5e1',
+    allowed: '#2563eb',
+    denied: '#dc2626',
+    committed: '#059669',
+    verified: '#16a34a',
+    blocked: '#7f1d1d',
+  };
+
+  return (
+    <section style={{ marginBottom: 24 }}>
+      <h3 style={{ marginBottom: 12 }}>Demo Flow</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
+        {steps.map((step) => (
+          <div key={step.label} style={{ border: `2px solid ${colors[step.status]}`, borderRadius: 6, padding: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>{step.label}</div>
+            <div style={{ fontSize: 12, color: colors[step.status] }}>{step.status}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function App() {
   const [phase, setPhase] = useState<DemoPhase>('idle');
   const [evidence, setEvidence] = useState<DemoEvidence | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [flow, setFlow] = useState<FlowStep[]>(INITIAL_FLOW);
 
   function log(msg: string) {
     setLogs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
+  }
+
+  function setFlowStatus(label: string, status: FlowStep['status']) {
+    setFlow((prev) => prev.map((step) => step.label === label ? { ...step, status } : step));
+  }
+
+  function resetDemo() {
+    setPhase('idle');
+    setEvidence(null);
+    setLogs([]);
+    setFlow(INITIAL_FLOW);
   }
 
   async function runAllowPath() {
     setPhase('running');
     setLogs([]);
     setEvidence(null);
+    setFlow(INITIAL_FLOW);
 
     try {
       // 1. Health
@@ -34,6 +81,8 @@ function App() {
       log('Submitting allow proposal (scope.intent: demo.transform_json)...');
       const allowResult = await proposeAllow();
       log(`Proposal decision: ${allowResult.decision} (id: ${allowResult.proposal_id})`);
+      setFlowStatus('Proposal', 'allowed');
+      setFlowStatus('Gateway Decision', 'allowed');
 
       if (allowResult.decision !== 'allow') {
         throw new Error('Expected allow but got deny');
@@ -46,16 +95,19 @@ function App() {
       });
       const outputDigest = await createHash(artifactData);
       log(`Bounded demo artifact created, digest: ${outputDigest.slice(0, 16)}...`);
+      setFlowStatus('Bounded Artifact', 'allowed');
 
       // 4. Commit
       log('Committing to gateway...');
       const commitResult = await commitProposal(allowResult.proposal_id, allowResult.decision_id, outputDigest);
       log(`Committed: record_hash=${commitResult.record_hash.slice(0, 16)}...`);
+      setFlowStatus('Commit', 'committed');
 
       // 5. Verify
       log('Verifying integrity...');
       const verifyResult = await verifyRecord(commitResult.record_hash, commitResult.signature);
       log(`Verified: integrity=${verifyResult.integrity}`);
+      setFlowStatus('Verify', 'verified');
 
       // 6. Deny path
       log('Submitting deny proposal (scope.intent: demo.forbidden_action)...');
@@ -91,11 +143,13 @@ function App() {
 
       setEvidence(fullEvidence);
       setPhase('complete');
+      setFlowStatus('Evidence', 'verified');
       log(`Demo complete. demo_passed=${fullEvidence.demo_passed}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       log(`ERROR: ${msg}`);
       setPhase('error');
+      setFlow((prev) => prev.map((step) => step.status === 'pending' ? { ...step, status: 'blocked' } : step));
     }
   }
 
@@ -103,6 +157,7 @@ function App() {
     setPhase('running');
     setLogs([]);
     setEvidence(null);
+    setFlow(INITIAL_FLOW);
 
     try {
       log('Checking gateway health...');
@@ -112,6 +167,11 @@ function App() {
       log('Submitting deny proposal (scope.intent: demo.forbidden_action)...');
       const denyResult = await proposeDeny();
       log(`Deny decision: ${denyResult.decision}`);
+      setFlowStatus('Proposal', 'denied');
+      setFlowStatus('Gateway Decision', 'denied');
+      setFlowStatus('Bounded Artifact', 'blocked');
+      setFlowStatus('Commit', 'blocked');
+      setFlowStatus('Verify', 'blocked');
 
       const negativeEvidence = {
         denied: true,
@@ -135,11 +195,13 @@ function App() {
 
       setEvidence(denyEvidence);
       setPhase('complete');
-      log(`Deny path complete. demo_passed=${denyEvidence.demo_passed}`);
+      setFlowStatus('Evidence', 'verified');
+      log(`Deny path complete. path_result=${denyEvidence.path_result}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       log(`ERROR: ${msg}`);
       setPhase('error');
+      setFlow((prev) => prev.map((step) => step.status === 'pending' ? { ...step, status: 'blocked' } : step));
     }
   }
 
@@ -149,10 +211,11 @@ function App() {
       <NonClaimsPanel claims={NON_CLAIMS} />
       <DemoControls
         phase={phase}
-        onAllow={runAllowPath}
         onDeny={runDenyOnly}
         onRunFull={runAllowPath}
+        onReset={resetDemo}
       />
+      <DemoFlow steps={flow} />
       <StatusLog logs={logs} />
       {evidence && <EvidencePanel evidence={evidence} />}
     </div>

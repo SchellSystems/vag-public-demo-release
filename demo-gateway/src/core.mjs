@@ -232,17 +232,46 @@ export function verify(body) {
   }
 
   const expectedSignature = hmacSha256(record_hash);
+  const canonicalRecord = canonicalJson({
+    proposal_id: found.proposal_id,
+    decision_id: found.decision_id,
+    output_digest: found.output_digest,
+    scope_intent: found.scope_intent,
+  });
+  const reconstructedHash = sha256(JSON.stringify(canonicalRecord));
+  const proposal = proposals.get(found.proposal_id);
+  const hashIntegrity = reconstructedHash === found.record_hash && found.record_hash === record_hash;
+  const referenceIntegrity =
+    Boolean(proposal) &&
+    proposal.decision === 'allow' &&
+    proposal.decision_id === found.decision_id &&
+    proposal.scope_intent === found.scope_intent;
 
   // Timing-safe comparison
   const sigBuffer = Buffer.from(signature, 'hex');
   const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-  const valid = timingSafeEqual(sigBuffer, expectedBuffer);
+  const signatureIntegrity = timingSafeEqual(sigBuffer, expectedBuffer);
+  const valid = hashIntegrity && signatureIntegrity && referenceIntegrity;
 
-  if (!valid) {
+  if (!signatureIntegrity) {
     return {
       error: 'tampered_signature',
       message: 'Signature does not match. Integrity check failed.',
       integrity: false,
+      hash_integrity: hashIntegrity,
+      signature_integrity: false,
+      reference_integrity: referenceIntegrity,
+    };
+  }
+
+  if (!valid) {
+    return {
+      error: 'tampered_record',
+      message: 'Record hash or proposal reference integrity check failed.',
+      integrity: false,
+      hash_integrity: hashIntegrity,
+      signature_integrity: signatureIntegrity,
+      reference_integrity: referenceIntegrity,
     };
   }
 
@@ -250,6 +279,9 @@ export function verify(body) {
     valid: true,
     status: 'verified',
     integrity: true,
+    hash_integrity: true,
+    signature_integrity: true,
+    reference_integrity: true,
     record_hash,
     proposal_id: found.proposal_id,
     decision_id: found.decision_id,
