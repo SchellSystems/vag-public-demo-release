@@ -2,7 +2,7 @@
 
 ## Is this production-ready?
 
-No. This is a private quarantine repository for curated public-demo preparation. It is not production-ready, not deployed, and not released.
+No. This is a bounded public demo repository. It is released only as demo material, not as a production system, compliance proof, security product, sandbox, or enterprise platform.
 
 ## Is this a sandbox?
 
@@ -22,11 +22,11 @@ No. Evidence records and reconstructs a bounded demo path. It does not prove com
 
 ## Is this the VAG Core?
 
-No. The VAG Core is in a distinct private repository (VAG-v1-main). This repository contains only rewritten and synthetic public-demo preparation material.
+No. This repository contains no canonical VAG Core implementation. It contains a minimal local demo gateway that simulates the bounded public demo contract.
 
 ## Does this repository contain private Gateway code?
 
-No. This repository contains no Gateway implementation code. It contains only documentation and synthetic examples.
+No. This repository contains no private Gateway or canonical Core implementation code. It contains a minimal local demo gateway for the bounded public demo only.
 
 ## Does this repository contain real Evidence?
 
@@ -34,7 +34,7 @@ No. All evidence examples in this repository are synthetic. They are marked with
 
 ## Is this a public release?
 
-No. This repository is private. No publication, release, deploy, or visibility change has been performed.
+This repository is a bounded public demo repository. No production release, deploy, or production visibility claim is made by this repository.
 
 ## Can this be used for real production workflows?
 

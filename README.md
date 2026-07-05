@@ -1,6 +1,6 @@
 # VAG Public Demo
 
-VAG Public Demo is a curated, bounded demonstration surface for explaining verifiable agent execution control concepts.
+VAG Public Demo is a bounded local demo of proposal, gateway decision, commit, verify, and evidence concepts for inspectable agent execution control.
 
 ## Components
 
@@ -18,7 +18,7 @@ VAG Public Demo is a curated, bounded demonstration surface for explaining verif
 npm ci
 npm run gateway &       # starts demo-gateway on :4400
 npm run dev             # starts demo-ui on :5173
-npm run probe:public    # validates gateway behavior
+npm run smoke           # starts gateway and validates gateway behavior
 ```
 
 ## Bounded Demo Logic
@@ -76,6 +76,10 @@ This repository is in the final phase of preparation for public demonstration. I
 ## License
 
 This project is licensed under the GNU Affero General Public License version 3 or later. See [LICENSE](LICENSE) for details.
+
+## Commercial / Pilot Use
+
+The demo is distributed under AGPL-3.0-or-later. Commercial pilot, integration, hosted, or proprietary use may require a separate written agreement or commercial license from the repository owner.
 
 ## Contributing
 

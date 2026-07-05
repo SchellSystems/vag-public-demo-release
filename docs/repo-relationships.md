@@ -17,10 +17,10 @@ Not Core. Not normative runtime.
 
 ## vag-public-demo
 
-Private quarantine repo.
-Curated public-demo preparation surface.
-No private history. No private evidence. No runtime code.
+Bounded public demo repo.
+Curated public-demo documentation and local runtime surface.
+No private history. No private evidence. No canonical Core runtime code.
 
 ## Statement
 
-This repository is a rewritten and synthetic public-demo preparation surface, not an export of private Core history.
+This repository is a rewritten and synthetic bounded public-demo surface, not an export of private Core history.

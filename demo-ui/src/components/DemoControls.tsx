@@ -2,12 +2,12 @@ import type { DemoPhase } from '../types';
 
 interface DemoControlsProps {
   phase: DemoPhase;
-  onAllow: () => void;
   onDeny: () => void;
   onRunFull: () => void;
+  onReset: () => void;
 }
 
-export function DemoControls({ phase, onAllow, onDeny, onRunFull }: DemoControlsProps) {
+export function DemoControls({ phase, onDeny, onRunFull, onReset }: DemoControlsProps) {
   const disabled = phase === 'running';
 
   const buttonStyle = (color: string) => ({
@@ -26,14 +26,14 @@ export function DemoControls({ phase, onAllow, onDeny, onRunFull }: DemoControls
   return (
     <section style={{ marginBottom: 24 }}>
       <h3 style={{ marginBottom: 12 }}>Demo Controls</h3>
-      <button style={buttonStyle('#2563eb')} onClick={onAllow} disabled={disabled}>
-        Allow Demo
+      <button style={buttonStyle('#059669')} onClick={onRunFull} disabled={disabled}>
+        Run Full Demo
       </button>
       <button style={buttonStyle('#dc2626')} onClick={onDeny} disabled={disabled}>
-        Deny Demo
+        Run Deny-Only Demo
       </button>
-      <button style={buttonStyle('#059669')} onClick={onRunFull} disabled={disabled}>
-        Run Gateway-Bound Demo
+      <button style={buttonStyle('#475569')} onClick={onReset} disabled={disabled}>
+        Reset
       </button>
     </section>
   );

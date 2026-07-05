@@ -13,17 +13,18 @@ This export is a history-clean snapshot prepared from the private source reposit
 ## Repository State
 
 - Source repository remains private.
-- Target repository is private.
+- Target repository is a bounded public demo repository.
 - Target repository was created history-clean.
 - Initial target commit SHA: `9222b010c534b195d10135f4fb9ada0300f5fbbf`
-- Remote `main` points to `9222b010c534b195d10135f4fb9ada0300f5fbbf`.
+- Original target commit SHA: `9222b010c534b195d10135f4fb9ada0300f5fbbf`.
+- Current `main` after target PR #1 points to `08a5c33d52bdbf0b4b48231d726462d1c6d3f5ae`.
 - Workflow `Öffentliche Demo-Prüfung Nr. 1` succeeded on commit `9222b01`.
-- No publication was performed.
-- No release was performed.
+- No production publication was performed.
+- No production release was performed.
 - No deploy was performed.
 - No tag was created.
 - No visibility change was performed.
-- Public visibility remains an owner decision.
+- Production release, deployment, tagging, and production visibility claims remain owner decisions outside this snapshot.
 
 ## License
 
@@ -58,4 +59,4 @@ This snapshot does not claim:
 
 ## Authority Boundary
 
-This document records a private, history-clean public-demo snapshot state only. It does not authorize public visibility, release, deployment, tagging, production use, compliance claims, security claims, sandbox claims, isolation claims, or external platform integration claims.
+This document records a history-clean bounded public-demo snapshot state only. It does not authorize production release, deployment, tagging, production use, compliance claims, security claims, sandbox claims, isolation claims, or external platform integration claims.

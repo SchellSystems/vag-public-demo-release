@@ -7,6 +7,9 @@ export interface DemoEvidence {
   deny_run: ProposeResult | null;
   bounded_demo_artifacts: BoundedDemoArtifacts | null;
   negative_evidence: NegativeEvidence | null;
+  path_result: 'full_demo_passed' | 'deny_path_passed' | 'incomplete' | 'failed';
+  full_demo_passed: boolean;
+  deny_path_passed: boolean;
   demo_passed: boolean;
   truth_surface: string;
   truth_boundaries: string[];
@@ -54,6 +57,9 @@ export interface VerifyResult {
   valid: boolean;
   status: string;
   integrity: boolean;
+  hash_integrity: boolean;
+  signature_integrity: boolean;
+  reference_integrity: boolean;
   record_hash: string;
   proposal_id: string;
   decision_id: string;
@@ -86,3 +92,10 @@ export interface GatewayError {
 }
 
 export type DemoPhase = 'idle' | 'running' | 'complete' | 'error';
+
+export type FlowStatus = 'pending' | 'allowed' | 'denied' | 'committed' | 'verified' | 'blocked';
+
+export interface FlowStep {
+  label: string;
+  status: FlowStatus;
+}

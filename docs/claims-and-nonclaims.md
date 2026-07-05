@@ -28,7 +28,7 @@ These terms must always be accompanied by scope qualifiers and non-claims.
 The following claims are explicitly forbidden:
 
 - production-ready
-- public-ready
+- public product-ready
 - compliance-ready
 - security-ready
 - sandboxed

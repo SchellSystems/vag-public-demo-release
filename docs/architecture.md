@@ -47,7 +47,8 @@ Deny stops the bounded Pilot path from producing ToolGrant, Commit, and Verify a
 - Evidence reconstructs bounded demo paths.
 - Verify checks integrity within scope.
 - Pilot/Demo artifacts are not Core.
-- This repository contains no Gateway Core and no runtime implementation.
+- This repository contains no canonical VAG Core implementation.
+- This repository contains a minimal local demo gateway that simulates the bounded public demo contract.
 
 ## What This Architecture Is Not
 

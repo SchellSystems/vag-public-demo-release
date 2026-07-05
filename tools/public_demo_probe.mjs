@@ -169,6 +169,9 @@ async function probe() {
   assert(verifyResult.status === 'verified', 'verify succeeded');
   assert(verifyResult.valid === true, 'verify.valid === true');
   assert(verifyResult.integrity === true, 'integrity is true');
+  assert(verifyResult.hash_integrity === true, 'hash_integrity is true');
+  assert(verifyResult.signature_integrity === true, 'signature_integrity is true');
+  assert(verifyResult.reference_integrity === true, 'reference_integrity is true');
   assert(verifyResult.decision_id === allow.decision_id, 'verify returns decision_id');
   assert(verifyResult.source === 'demo_gateway', 'verify.source === demo_gateway');
   assert(verifyResult.truth_status === 'runtime_demo_integrity_verified', 'verify.truth_status correct');
