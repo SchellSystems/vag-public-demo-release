@@ -1,0 +1,51 @@
+{
+  "synthetic": true,
+  "not_real_evidence": true,
+  "not_from_private_runtime": true,
+  "not_production_evidence": true,
+  "human_review_required": true,
+  "description": "Synthetic bounded demo evidence example showing an allowed path",
+  "non_claims": [
+    "not_compliance_proof",
+    "not_security_certification",
+    "not_full_telemetry",
+    "not_production_evidence",
+    "not_system_wide_enforcement"
+  ],
+  "bounded_demo_path": {
+    "proposal": {
+      "id": "public-demo-proposal-001",
+      "type": "bounded-demo-action",
+      "description": "Synthetic demo proposal for illustrative purposes"
+    },
+    "decision": {
+      "id": "public-demo-decision-001",
+      "gateway_result": "ALLOW",
+      "scope": "bounded-demo-contract"
+    },
+    "execution": {
+      "id": "public-demo-execution-001",
+      "status": "completed",
+      "bounded_context": "demo-pilot-path"
+    },
+    "commit": {
+      "id": "public-demo-commit-001",
+      "binds_to_proposal": "public-demo-proposal-001",
+      "binds_to_decision": "public-demo-decision-001",
+      "record_hash": "synthetic-record-hash-placeholder"
+    },
+    "evidence": {
+      "id": "public-demo-evidence-001",
+      "reconstructs_path": true,
+      "path_type": "bounded-demo"
+    },
+    "verify": {
+      "id": "public-demo-verify-001",
+      "integrity_check": "VERIFY_OK",
+      "hash_valid": true,
+      "signature_valid": true,
+      "signature": "synthetic-signature-placeholder",
+      "scope": "bounded-demo-path-only"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "vag-public-demo",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "workspaces": [
+    "demo-gateway",
+    "demo-ui"
+  ],
+  "scripts": {
+    "gateway": "node demo-gateway/src/server.mjs",
+    "dev": "npm run --workspace=demo-ui dev",
+    "build": "npm run --workspace=demo-ui build",
+    "probe:public": "node tools/public_demo_probe.mjs",
+    "smoke": "node tools/gateway_smoke.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

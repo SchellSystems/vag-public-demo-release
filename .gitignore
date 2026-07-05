@@ -1,0 +1,16 @@
+.env
+.env.*
+mcp.json
+workspace/
+node_modules/
+dist/
+build/
+.DS_Store
+__pycache__/
+*.pyc
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.log

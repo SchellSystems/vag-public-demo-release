@@ -1,0 +1,42 @@
+name: Public Demo Audit
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run claim audit
+        run: python tools/check_claims.py .
+
+      - name: Run export audit
+        run: python tools/export_audit.py .
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build demo-ui
+        run: npm run build
+
+      - name: Start gateway and run probe
+        run: |
+          node demo-gateway/src/server.mjs &
+          GATEWAY_PID=$!
+          trap "kill $GATEWAY_PID || true" EXIT
+          sleep 2
+          npm run probe:public

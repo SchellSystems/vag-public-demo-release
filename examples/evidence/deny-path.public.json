@@ -1,0 +1,54 @@
+{
+  "synthetic": true,
+  "not_real_evidence": true,
+  "not_from_private_runtime": true,
+  "not_production_evidence": true,
+  "human_review_required": true,
+  "description": "Synthetic deny path example showing a denied bounded Pilot path",
+  "non_claims": [
+    "not_compliance_proof",
+    "not_security_certification",
+    "not_full_telemetry",
+    "not_production_evidence",
+    "not_system_wide_enforcement"
+  ],
+  "deny_path_clarification": {
+    "what_deny_means": "Bounded Pilot-path stop. No ToolGrant. No Commit. No Verify.",
+    "what_deny_does_not_mean": [
+      "system-wide non-execution",
+      "OS-level blocking",
+      "browser-level blocking",
+      "network-level blocking",
+      "process-level blocking",
+      "filesystem-level blocking",
+      "cloud-level blocking",
+      "sandbox",
+      "isolation"
+    ]
+  },
+  "bounded_demo_path": {
+    "proposal": {
+      "id": "public-demo-proposal-002",
+      "type": "bounded-demo-action",
+      "description": "Synthetic demo proposal that will be denied"
+    },
+    "decision": {
+      "id": "public-demo-decision-002",
+      "gateway_result": "DENY",
+      "scope": "bounded-demo-contract",
+      "reason": "Proposal does not meet bounded demo/Core contract requirements"
+    },
+    "execution": null,
+    "commit": null,
+    "evidence": {
+      "id": "public-demo-evidence-002",
+      "reconstructs_path": true,
+      "path_type": "bounded-demo-deny",
+      "deny_recorded": true,
+      "tool_grant_issued": false,
+      "commit_created": false,
+      "verify_created": false
+    },
+    "verify": null
+  }
+}
