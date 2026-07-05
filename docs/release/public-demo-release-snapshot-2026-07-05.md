@@ -18,6 +18,7 @@ This export is a history-clean snapshot prepared from the private source reposit
 - Initial target commit SHA: `9222b010c534b195d10135f4fb9ada0300f5fbbf`
 - Original target commit SHA: `9222b010c534b195d10135f4fb9ada0300f5fbbf`.
 - Current `main` after target PR #1 points to `08a5c33d52bdbf0b4b48231d726462d1c6d3f5ae`.
+- Current `main` after target PR #2 points to `3eb1b3f0d6feab9bc055068ff5325cda4c8992f7`.
 - Workflow `Öffentliche Demo-Prüfung Nr. 1` succeeded on commit `9222b01`.
 - No production publication was performed.
 - No production release was performed.
@@ -35,12 +36,14 @@ The full AGPL license text is present in `LICENSE`.
 The source snapshot and target export state were validated with:
 
 - `python tools/export_audit.py .`: PASS, 0 FAIL, 4 WARN
-- `python tools/check_claims.py .`: PASS, 0 FAIL, 8 WARN
+- `python tools/check_claims.py .`: PASS, 0 FAIL, 10 WARN
 - `npm audit --omit=dev`: PASS, 0 runtime vulnerabilities
 - `npm run build`: PASS
-- `npm run smoke`: PASS, 42 passed, 0 failed
+- `npm run smoke`: PASS, 45 passed, 0 failed
 
 Source PR #13 fixed the export audit LICENSE false positive before the history-clean target repository push.
+
+Target PR #2 aligned public-demo positioning, UI evidence semantics, gateway verify integrity fields, and CI smoke validation. Its merge commit is `3eb1b3f0d6feab9bc055068ff5325cda4c8992f7`.
 
 ## Non-Claims
 
