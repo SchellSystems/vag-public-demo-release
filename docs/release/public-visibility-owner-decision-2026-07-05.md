@@ -1,6 +1,6 @@
 # Public Visibility Owner Decision - 2026-07-05
 
-DECISION = APPROVED
+DECISION = PENDING
 
 ## Decision Scope
 
