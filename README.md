@@ -62,6 +62,7 @@ Also:
 
 ## Documentation
 
+- [From Public Demo to VAG Architecture](docs/architecture/from-demo-to-vag.md)
 - [Demo Walkthrough](docs/demo/walkthrough.md)
 - [Runbook](docs/demo/runbook.md)
 - [Threat Model](docs/demo/threat-model.md)
