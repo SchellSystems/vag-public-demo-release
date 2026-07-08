@@ -33,6 +33,9 @@ jobs:
       - name: Audit runtime dependencies
         run: npm audit --omit=dev
 
+      - name: Run gateway core unit tests
+        run: npm test
+
       - name: Build demo-ui
         run: npm run build
 
