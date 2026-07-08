@@ -43,6 +43,10 @@ Agent Proposal
 
 ## Quick Start
 
+Prerequisite:
+
+- Node.js `>=20.19.0`; Node.js 22 is used by the public demo audit workflow.
+
 Install dependencies and run the automated local smoke test:
 
 ```bash
