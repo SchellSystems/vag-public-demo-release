@@ -21,7 +21,7 @@ It exists to prevent future drift between:
 - review-chat state,
 - and later release or partner-facing interpretations.
 
-This document is not a release, tag, deploy, package publication, product launch, security certification, compliance approval, or production readiness statement.
+This document is not a release, tag, deploy, package publication, product launch, certification, compliance approval, or production-readiness statement.
 
 ---
 
@@ -145,7 +145,7 @@ These results support:
 PUBLIC_DEMO_BASELINE_VERIFIED_WITH_NOTE
 ```
 
-They do not support any production, compliance, security, sandbox, isolation, enterprise, external integration, full telemetry, or certification claim.
+They do not support any broader production, compliance, assurance, sandbox, isolation, enterprise, external integration, telemetry, or certification statement.
 
 ---
 
@@ -185,16 +185,16 @@ The repository demonstrates a bounded local proposal-decision-commit-evidence-ve
 Incorrect interpretations include:
 
 ```text
-production-ready system
-compliance-ready system
-security-ready system
-sandbox
-isolation layer
-system-wide enforcement
-system-wide non-execution proof
-full telemetry system
-external platform integration
-enterprise-security-certified product
+a production system
+a compliance system
+a broad assurance system
+a sandbox claim
+an isolation claim
+global enforcement
+a global proof that execution cannot happen
+a complete telemetry system
+an external platform integration
+an enterprise assurance product
 ```
 
 ---
@@ -233,7 +233,7 @@ The public demo is not the private Core.
 
 Connector search and local claim-audit validation found no current blocking evidence of forbidden public-surface claims.
 
-Specifically reviewed categories included:
+Specifically reviewed forbidden or blocked categories included:
 
 ```text
 Palantir
@@ -248,19 +248,19 @@ real payment
 bank integration
 wallet integration
 settlement system
-production-ready
-public-ready
-compliance-ready
-security-ready
-sandboxed
-isolated
-enterprise-security-certified
-system-wide enforcement
-full telemetry
-Verify approves
-Verify authorizes
-Evidence proves compliance
-Evidence proves security
+production-readiness wording
+public product-readiness wording
+compliance-readiness wording
+security-readiness wording
+sandbox claim wording
+isolation claim wording
+enterprise assurance wording
+global enforcement wording
+complete telemetry wording
+Verify-as-approval wording
+Verify-as-authorization wording
+Evidence-as-compliance wording
+Evidence-as-security wording
 ```
 
 Current conclusion:
@@ -347,7 +347,7 @@ The following remain intentionally open or limited:
 GitHub Actions status for latest main was not observable through connector.
 Local validation was reported from codex/main, accepted only because codex/main and main were connector-confirmed identical.
 The public demo remains bounded and local.
-No production, compliance, security, sandbox, isolation, full telemetry, or enterprise claim is introduced.
+No production, compliance, assurance, sandbox, isolation, telemetry, or enterprise claim is introduced.
 ```
 
 ---
