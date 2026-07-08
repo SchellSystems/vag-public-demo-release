@@ -1,6 +1,35 @@
 # VAG Public Demo
 
-VAG Public Demo is a bounded local demo of proposal, gateway decision, commit, verify, and evidence concepts for inspectable agent execution control.
+[![Public Demo Audit](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml/badge.svg)](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml)
+
+VAG Public Demo is a bounded local demonstration of inspectable agent execution control: proposal, gateway decision, commit, evidence, and verify.
+
+The repository is intentionally small. It shows one reviewable path clearly instead of presenting a larger system than the public demo contains.
+
+## Review the Demo in Three Minutes
+
+Start here if you are evaluating the repository for the first time:
+
+- [Three-Minute Demo Review](docs/demo/three-minute-review.md)
+- [Demo Walkthrough](docs/demo/walkthrough.md)
+- [Claims and Non-Claims](docs/claims-and-nonclaims.md)
+
+## What to Look For
+
+- A scoped proposal enters the local demo gateway.
+- The gateway returns an explicit allow or deny decision.
+- Allowed bounded demo paths can produce commit and evidence artifacts.
+- Denied bounded demo paths do not produce ToolGrant, Commit, or Verify artifacts.
+- Verify checks hash, signature, and reference integrity for the bounded demo record.
+
+## Demo Flow
+
+```text
+Agent Proposal
+  -> Gateway Decision
+      -> allow -> bounded demo artifact -> Commit -> Evidence -> Verify
+      -> deny  -> no ToolGrant / no Commit / no Verify in the bounded path
+```
 
 ## Components
 
@@ -14,16 +43,28 @@ VAG Public Demo is a bounded local demo of proposal, gateway decision, commit, v
 
 ## Quick Start
 
+Install dependencies and run the automated local smoke test:
+
 ```bash
 npm ci
-npm run gateway &       # starts demo-gateway on :4400
-npm run dev             # starts demo-ui on :5173
-npm run smoke           # starts gateway and validates gateway behavior
+npm run smoke
 ```
+
+Run the interactive demo locally with two terminals:
+
+```bash
+npm run gateway
+```
+
+```bash
+npm run dev
+```
+
+The demo gateway listens on `:4400`. The demo UI runs on `:5173`.
 
 ## Bounded Demo Logic
 
-```
+```text
 Agent proposes.
 Gateway decides within a bounded demo/Core contract.
 Execution artifacts are created only after an allowed bounded path.
@@ -62,6 +103,7 @@ Also:
 
 ## Documentation
 
+- [Three-Minute Demo Review](docs/demo/three-minute-review.md)
 - [From Public Demo to VAG Architecture](docs/architecture/from-demo-to-vag.md)
 - [Demo Walkthrough](docs/demo/walkthrough.md)
 - [Runbook](docs/demo/runbook.md)
@@ -72,7 +114,7 @@ Also:
 
 ## Repository Status
 
-This repository is in the final phase of preparation for public demonstration. It remains a bounded demo and does not claim production readiness. The bounded demo illustrates agent execution control concepts; no real external workflow integration or security certification is implied.
+This repository is a public bounded local demo. It illustrates a reviewable agent execution control path and remains limited to the repository scope described in the documentation. No real external workflow integration, global execution control, or certification is implied.
 
 ## License
 
