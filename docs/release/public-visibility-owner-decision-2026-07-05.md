@@ -56,15 +56,15 @@ Not approved:
 - Any tag creation.
 - Any package publication.
 - Any deploy.
-- Any production use claim.
-- Any compliance claim.
-- Any security claim.
-- Any sandbox claim.
-- Any isolation claim.
-- Any external integration claim.
-- Any claim that Verify approves, authorizes, or certifies.
-- Any claim that Evidence proves compliance or security.
-- Any claim that Deny proves system-wide non-execution.
+- Any live-operation use claim.
+- Any regulatory-result claim.
+- Any assurance-result claim.
+- Any sandbox-runtime claim.
+- Any environment-separation claim.
+- Any external operational integration claim.
+- Any claim that Verify is an approval, authorization, or certification mechanism.
+- Any claim that Evidence establishes regulatory or assurance status.
+- Any claim that Deny establishes global non-execution.
 
 ## Required Owner Checks Before Manual Visibility Change
 
