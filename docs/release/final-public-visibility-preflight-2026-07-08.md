@@ -92,26 +92,26 @@ The following repositories must remain private and are not part of this public v
 - `SchellSystems/VAG-Controlled-Agent-Pilot`
 - `SchellSystems/VAG-lite`
 
-## Explicit Non-Claims
+## Non-Claim Boundary
 
-This repository does not claim:
+This repository does not present itself as:
 
-- production readiness
-- public product readiness
-- compliance readiness
-- security readiness
-- sandboxing
-- isolation
-- certification
-- enterprise security certification
-- system-wide enforcement
-- system-wide non-execution proof
-- full telemetry
-- external production platform integration
-- named third-party platform integration
-- Verify approval or authorization
-- Evidence proof of compliance or security
-- Deny blocking OS, browser, network, process, filesystem, or cloud execution
+- ready for live operational use
+- an automatic public-product approval
+- a regulatory readiness result
+- an assurance readiness result
+- a sandbox runtime
+- an isolation layer
+- a certified status
+- an enterprise assurance status
+- a global enforcement layer
+- a global non-execution guarantee
+- a complete telemetry layer
+- an external live platform integration
+- a named third-party operational integration
+- a Verify-based approval or authorization mechanism
+- an Evidence-based proof of regulatory or assurance status
+- a Deny-based OS, browser, network, process, filesystem, or cloud block
 
 ## Verdict
 
