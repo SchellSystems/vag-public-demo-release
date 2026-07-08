@@ -13,7 +13,8 @@
     "dev": "npm run --workspace=demo-ui dev",
     "build": "npm run --workspace=demo-ui build",
     "probe:public": "node tools/public_demo_probe.mjs",
-    "smoke": "node tools/gateway_smoke.mjs"
+    "smoke": "node tools/gateway_smoke.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=18.0.0"
