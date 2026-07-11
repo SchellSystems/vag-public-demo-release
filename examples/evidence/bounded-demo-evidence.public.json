@@ -1,51 +1,60 @@
 {
   "synthetic": true,
+  "conceptual_example": true,
+  "runtime_replayable": false,
   "not_real_evidence": true,
   "not_from_private_runtime": true,
   "not_production_evidence": true,
   "human_review_required": true,
-  "description": "Synthetic bounded demo evidence example showing an allowed path",
+  "description": "Conceptual, non-replayable example of an allowed bounded public-demo record path",
   "non_claims": [
     "not_compliance_proof",
     "not_security_certification",
     "not_full_telemetry",
     "not_production_evidence",
-    "not_system_wide_enforcement"
+    "not_system_wide_enforcement",
+    "not_external_execution_observation"
   ],
-  "bounded_demo_path": {
+  "bounded_public_demo_path": {
     "proposal": {
-      "id": "public-demo-proposal-001",
+      "id": "conceptual-public-demo-proposal-001",
       "type": "bounded-demo-action",
-      "description": "Synthetic demo proposal for illustrative purposes"
+      "description": "Conceptual proposal for illustrative purposes"
     },
     "decision": {
-      "id": "public-demo-decision-001",
+      "id": "conceptual-public-demo-decision-001",
       "gateway_result": "ALLOW",
-      "scope": "bounded-demo-contract"
+      "scope": "bounded-public-demo-contract"
     },
-    "execution": {
-      "id": "public-demo-execution-001",
-      "status": "completed",
-      "bounded_context": "demo-pilot-path"
+    "client_artifact": {
+      "source": "demo-ui",
+      "created_after_allow": true,
+      "artifact_content_included": false,
+      "gateway_observed_artifact": false,
+      "output_digest": "conceptual-caller-supplied-digest-not-runtime-valid"
     },
     "commit": {
-      "id": "public-demo-commit-001",
-      "binds_to_proposal": "public-demo-proposal-001",
-      "binds_to_decision": "public-demo-decision-001",
-      "record_hash": "synthetic-record-hash-placeholder"
+      "id": "conceptual-public-demo-commit-001",
+      "binds_to_proposal": "conceptual-public-demo-proposal-001",
+      "binds_to_decision": "conceptual-public-demo-decision-001",
+      "binds_to_output_digest": "conceptual-caller-supplied-digest-not-runtime-valid",
+      "record_hash": "conceptual-non-replayable-record-hash"
     },
     "evidence": {
-      "id": "public-demo-evidence-001",
-      "reconstructs_path": true,
-      "path_type": "bounded-demo"
+      "id": "conceptual-public-demo-evidence-001",
+      "source": "conceptual-example",
+      "reconstructs_bounded_record_path": true,
+      "gateway_observation_of_external_execution": false
     },
     "verify": {
-      "id": "public-demo-verify-001",
-      "integrity_check": "VERIFY_OK",
-      "hash_valid": true,
-      "signature_valid": true,
-      "signature": "synthetic-signature-placeholder",
-      "scope": "bounded-demo-path-only"
+      "runtime_check_executed": false,
+      "illustrative_check_types": [
+        "hash_integrity",
+        "signature_integrity",
+        "reference_integrity"
+      ],
+      "result": "not_executed_conceptual_example",
+      "scope": "bounded-public-demo-path-only"
     }
   }
 }

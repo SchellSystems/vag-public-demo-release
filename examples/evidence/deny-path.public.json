@@ -1,19 +1,25 @@
 {
   "synthetic": true,
+  "conceptual_example": true,
+  "runtime_replayable": false,
   "not_real_evidence": true,
   "not_from_private_runtime": true,
   "not_production_evidence": true,
   "human_review_required": true,
-  "description": "Synthetic deny path example showing a denied bounded Pilot path",
+  "description": "Conceptual, non-replayable example of a denied bounded public-demo path",
   "non_claims": [
     "not_compliance_proof",
     "not_security_certification",
     "not_full_telemetry",
     "not_production_evidence",
-    "not_system_wide_enforcement"
+    "not_system_wide_enforcement",
+    "not_system_wide_non_execution_proof"
   ],
   "deny_path_clarification": {
-    "what_deny_means": "Bounded Pilot-path stop. No ToolGrant. No Commit. No Verify.",
+    "what_gateway_deny_means": "The gateway returned deny and rejects commit for the denied proposal.",
+    "what_ui_derived_negative_evidence_means": "The bounded UI flow created no local demo artifact and produced no Commit or Verify after deny.",
+    "negative_evidence_source": "ui_derived_from_gateway_deny",
+    "tool_grant_subsystem_present": false,
     "what_deny_does_not_mean": [
       "system-wide non-execution",
       "OS-level blocking",
@@ -26,29 +32,28 @@
       "isolation"
     ]
   },
-  "bounded_demo_path": {
+  "bounded_public_demo_path": {
     "proposal": {
-      "id": "public-demo-proposal-002",
+      "id": "conceptual-public-demo-proposal-002",
       "type": "bounded-demo-action",
-      "description": "Synthetic demo proposal that will be denied"
+      "description": "Conceptual proposal that receives a deny decision"
     },
     "decision": {
-      "id": "public-demo-decision-002",
+      "id": "conceptual-public-demo-decision-002",
       "gateway_result": "DENY",
-      "scope": "bounded-demo-contract",
-      "reason": "Proposal does not meet bounded demo/Core contract requirements"
+      "scope": "bounded-public-demo-contract",
+      "reason": "Proposal does not meet bounded public-demo contract requirements"
     },
-    "execution": null,
+    "client_artifact": null,
     "commit": null,
-    "evidence": {
-      "id": "public-demo-evidence-002",
-      "reconstructs_path": true,
-      "path_type": "bounded-demo-deny",
-      "deny_recorded": true,
-      "tool_grant_issued": false,
-      "commit_created": false,
-      "verify_created": false
-    },
-    "verify": null
+    "verify": null,
+    "ui_derived_negative_evidence": {
+      "denied": true,
+      "local_demo_artifact_followed": false,
+      "commit_followed": false,
+      "verify_followed": false,
+      "bounded_path_only": true,
+      "system_wide_observation": false
+    }
   }
 }

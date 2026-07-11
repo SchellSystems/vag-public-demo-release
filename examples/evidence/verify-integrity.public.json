@@ -1,54 +1,41 @@
 {
   "synthetic": true,
+  "conceptual_example": true,
+  "runtime_replayable": false,
   "not_real_evidence": true,
   "not_from_private_runtime": true,
   "not_production_evidence": true,
   "human_review_required": true,
-  "description": "Synthetic verify integrity example showing hash and reference checks",
+  "description": "Conceptual, non-replayable illustration of the stored relationships Verify can check",
   "non_claims": [
     "not_compliance_proof",
     "not_security_certification",
     "not_full_telemetry",
     "not_production_evidence",
-    "not_system_wide_enforcement"
+    "not_system_wide_enforcement",
+    "not_an_executed_verify_result"
   ],
   "verify_clarification": {
-    "what_verify_means": "Checks hash, signature, and reference integrity within scope",
+    "what_verify_means": "Checks stored hash, signature, and proposal/decision reference relationships within scope",
     "what_verify_does_not_mean": [
       "approval",
       "authorization",
       "safety certification",
       "governance decision",
-      "compliance proof"
+      "compliance proof",
+      "external execution observation"
     ]
   },
-  "verification": {
-    "target_commit": "public-demo-commit-001",
-    "checks": [
-      {
-        "check_type": "hash_integrity",
-        "input_hash": "synthetic-record-hash-placeholder",
-        "computed_hash": "synthetic-record-hash-placeholder",
-        "result": "VERIFY_OK",
-        "scope": "bounded-demo-path-only"
-      },
-      {
-        "check_type": "signature_integrity",
-        "signature": "synthetic-signature-placeholder",
-        "result": "VERIFY_OK",
-        "scope": "bounded-demo-path-only"
-      },
-      {
-        "check_type": "reference_integrity",
-        "proposal_ref": "public-demo-proposal-001",
-        "decision_ref": "public-demo-decision-001",
-        "commit_ref": "public-demo-commit-001",
-        "result": "VERIFY_OK",
-        "scope": "bounded-demo-path-only"
-      }
+  "conceptual_verification": {
+    "runtime_check_executed": false,
+    "target_commit": "conceptual-public-demo-commit-001",
+    "illustrative_check_types": [
+      "hash_integrity",
+      "signature_integrity",
+      "reference_integrity"
     ],
-    "overall_result": "VERIFY_OK",
-    "overall_scope": "bounded-demo-path-only",
+    "result": "not_executed_conceptual_example",
+    "scope": "bounded-public-demo-path-only",
     "not_approval": true,
     "not_authorization": true,
     "not_governance": true

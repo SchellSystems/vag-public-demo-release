@@ -7,7 +7,7 @@ This document describes the public, bounded demo architecture of VAG.
 ## Flow
 
 ```
-Proposal → Gateway Decision → Bounded Demo Execution → Commit → Evidence → Verify
+Proposal → Gateway Decision → UI-Created Demo Artifact → Caller-Supplied Digest → Commit → Evidence → Verify
 ```
 
 ## Components
@@ -18,35 +18,36 @@ An agent proposes an action within a bounded demo context.
 
 ### Gateway Decision
 
-The Gateway decides within a bounded demo/Core contract whether to allow or deny the proposed action.
+The Gateway decides within a bounded public-demo contract whether to allow or deny the proposed action.
 
-### Bounded Demo Execution
+### Bounded Demo Artifact
 
-If allowed, execution proceeds within the bounded demo path. Execution artifacts are produced only after an allowed bounded path.
+After allow, the UI creates a local demo artifact and computes its digest. The gateway receives the caller-supplied `output_digest`; it does not receive the artifact or observe external execution.
 
 ### Commit
 
-Commit binds a demo run to its proposal and decision context. It creates a verifiable link between what was proposed, what was decided, and what was executed.
+Commit binds the proposal, decision, and caller-supplied digest in the bounded public-demo record.
 
 ### Evidence
 
-Evidence reconstructs a bounded demo path. It records the sequence of proposal, decision, execution, and commit for later inspection.
+Evidence reconstructs the bounded public-demo record path. UI-assembled evidence may reference the local artifact and the committed digest, but it is not gateway observation of external execution.
 
 ### Verify
 
-Verify reports whether the available integrity checks (hash, signature, and reference integrity) pass within the bounded demo scope.
+Verify reports whether the stored hash, signature, and proposal/decision reference relationships pass their defined checks within the bounded demo scope.
 
 ### Deny
 
-Deny stops the bounded Pilot path from producing ToolGrant, Commit, and Verify artifacts. When the Gateway denies a proposal, no execution artifacts are created in the bounded demo path.
+For a denied proposal, the gateway rejects commit. In the bounded UI flow, no local demo artifact, Commit, or Verify follows, and the UI records that absence as derived negative evidence. The repository contains no ToolGrant subsystem, and deny does not prove system-wide non-execution.
 
 ## Boundaries
 
-- Gateway decides within a bounded demo/Core contract.
-- Commit binds execution to proposal/decision context.
-- Evidence reconstructs bounded demo paths.
-- Verify checks integrity within scope.
-- Pilot/Demo artifacts are not Core.
+- Gateway decides within a bounded public-demo contract.
+- The UI creates the local demo artifact after allow.
+- Commit binds proposal, decision, and caller-supplied digest.
+- Evidence reconstructs bounded public-demo record paths.
+- Verify checks stored integrity and reference relationships within scope.
+- Public-demo artifacts are not Core or Pilot artifacts.
 - This repository contains no canonical VAG Core implementation.
 - This repository contains a minimal local demo gateway that simulates the bounded public demo contract.
 

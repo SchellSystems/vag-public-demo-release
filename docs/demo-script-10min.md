@@ -8,7 +8,7 @@ Explain the bounded VAG demo concept in approximately 10 minutes with more detai
 
 ### Introduction (1 minute)
 
-VAG (Verifiable Agent Governance) demonstrates a bounded, accountable demo path for agent execution control. This demo explains how proposals, decisions, execution, commits, evidence, and verification work together within a defined scope.
+VAG (Verified Action Gateway) demonstrates a bounded public-demo record path. This demo explains how proposals, decisions, a locally created artifact digest, commits, evidence, and verification work together within a defined scope.
 
 This is a concept demonstration. It is not a production system.
 
@@ -18,7 +18,7 @@ When AI agents execute actions on behalf of users, accountability becomes critic
 
 - Who proposed the action?
 - Who decided to allow it?
-- What exactly was executed?
+- What digest was supplied for the local demo artifact?
 - Can we reconstruct what happened?
 - Can we verify the integrity of the record?
 
@@ -32,23 +32,24 @@ An agent creates a proposal describing an intended action within the bounded dem
 
 #### Step 2: Gateway Decision
 
-The Gateway evaluates the proposal against a bounded demo/Core contract. The Gateway decides: allow or deny.
+The Gateway evaluates the proposal against a bounded public-demo contract. The Gateway decides: allow or deny.
 
 #### Step 3a: Allow Path
 
 If allowed:
-- Execution proceeds within the bounded demo path.
-- A Commit is created, binding the execution to its proposal and decision context.
-- Evidence is recorded, capturing the bounded demo path.
-- Verify can check the integrity of the resulting artifacts.
+- The UI creates a local demo artifact and computes its digest.
+- The gateway receives the caller-supplied `output_digest`, not the artifact itself.
+- A Commit binds proposal, decision, and digest.
+- Evidence records the bounded public-demo record path.
+- Verify checks stored hash, signature, and reference relationships.
 
 #### Step 3b: Deny Path
 
 If denied:
-- No ToolGrant is issued.
-- No Commit is created.
-- No Verify artifacts are produced.
-- The bounded Pilot path stops.
+- The commit endpoint rejects the denied proposal.
+- The bounded UI flow creates no local demo artifact and produces no Commit or Verify.
+- The UI records this as derived negative evidence for the bounded public-demo path.
+- This repository contains no ToolGrant subsystem.
 - This does NOT mean system-wide non-execution.
 
 ### Evidence and Verification (2 minutes)
@@ -58,8 +59,8 @@ If denied:
 Evidence records and reconstructs the bounded demo path. It captures:
 - The proposal
 - The decision
-- The execution context
-- The commit reference
+- The caller-supplied artifact digest
+- The commit and reference context
 
 Evidence does NOT:
 - Prove compliance
@@ -69,7 +70,7 @@ Evidence does NOT:
 
 #### Verify
 
-Verify checks and reports hash, signature, and reference-integrity results within the bounded demo scope.
+Verify checks and reports stored hash, signature, and reference-relationship results within the bounded demo scope.
 
 Verify does NOT:
 - Approve actions
@@ -81,14 +82,15 @@ Verify does NOT:
 
 Each component has a defined role:
 - Gateway decides.
-- Commit binds.
+- The UI creates the local demo artifact after allow.
+- Commit binds proposal, decision, and caller-supplied digest.
 - Evidence records.
-- Verify checks integrity.
+- Verify checks stored integrity relationships.
 - No component assumes the authority of another.
 
 ### Closing (1 minute)
 
-VAG demonstrates that agent execution control concepts — proposal, decision, execution, commit, evidence, and verify — can be kept distinct and made inspectable within a bounded demo context.
+VAG demonstrates that proposal, decision, local artifact creation, digest binding, commit, evidence, and verify can be kept distinct and made inspectable within a bounded demo context.
 
 This demonstration does not claim production readiness, compliance certification, or security guarantees.
 

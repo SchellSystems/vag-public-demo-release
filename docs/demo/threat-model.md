@@ -15,17 +15,17 @@ It does not cover production systems, cloud deployments, or infrastructure.
 
 ## Trust Boundaries
 
-1. **Gateway ↔ UI**: CORS-restricted to localhost:5173, no credentials
-2. **Gateway ↔ External**: No external calls allowed (no HTTP client, no shell, no cloud)
-3. **UI ↔ External**: No external calls (all requests go to local gateway only)
+1. **Gateway ↔ UI**: The gateway returns a CORS response header for the configured demo-UI origin; no credentials are used. CORS is not authentication or a network boundary.
+2. **Gateway ↔ External**: The current gateway implementation contains no outbound HTTP client, shell, or cloud-SDK path. This is an implementation statement, not isolation.
+3. **UI ↔ Gateway**: The current UI client is configured to request the local demo gateway. This does not enforce loopback-only network binding.
 
 ## Threats and Mitigations
 
-### T1: Unauthorized Intent Execution
+### T1: Unauthorized Proposal Acceptance or Commit
 
-- **Threat**: An unauthorized intent bypasses the allowlist
+- **Threat**: An unauthorized intent is accepted or a denied proposal is committed
 - **Mitigation**: deny-by-default; only `demo.transform_json` and `demo.ping` allowed
-- **Residual risk**: Low in the bounded demo context because the allowlist is hardcoded; not assessed outside this local demo surface
+- **Residual boundary**: The static allowlist and commit rejection are tested only within this bounded demo implementation; no broader risk level is assigned
 
 ### T2: Top-Level Intent Authorization Bypass
 
@@ -52,15 +52,15 @@ It does not cover production systems, cloud deployments, or infrastructure.
 - **Threat**: Verifying a non-existent record
 - **Mitigation**: Gateway rejects unknown record hashes
 
-### T7: CORS Bypass
+### T7: CORS Misinterpretation
 
-- **Threat**: External origin accessing gateway
-- **Mitigation**: CORS restricted to demo-ui origin only, no credentials
+- **Threat**: A reviewer treats the configured CORS response header as authentication, request blocking, or network isolation
+- **Mitigation**: Documentation states that CORS only controls browser response access for the configured origin; it does not block non-browser requests or enforce loopback binding
 
-### T8: External Call Injection
+### T8: Unintended Outbound Call Path
 
-- **Threat**: Gateway making external network calls
-- **Mitigation**: No HTTP client libraries imported; no shell exec; no cloud SDK
+- **Threat**: A future change introduces an outbound HTTP, shell, or cloud call path
+- **Mitigation**: The current implementation imports no outbound HTTP client, shell execution API, or cloud SDK; this does not constitute a sandbox or network block
 
 ### T9: Decision ID Mismatch
 

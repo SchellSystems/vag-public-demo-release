@@ -176,14 +176,14 @@ The public demo shows only a bounded local path:
 ```text
 Proposal
   -> Gateway Decision
-      -> allow -> bounded demo artifact -> Commit -> Evidence -> Verify
-      -> deny  -> no ToolGrant / no Commit / no Verify in the bounded path
+      -> allow -> UI-created demo artifact -> caller-supplied digest -> Commit -> Evidence -> Verify
+      -> deny  -> Commit rejected / UI records no bounded follow-on chain
 ```
 
 Correct interpretation:
 
 ```text
-The repository demonstrates a bounded local proposal-decision-commit-evidence-verify path.
+The repository demonstrates a bounded local proposal-decision-artifact-digest-commit-evidence-verify path.
 ```
 
 Incorrect interpretations include:
@@ -209,11 +209,12 @@ The current authority boundaries remain:
 
 ```text
 Gateway decides within the bounded demo scope.
-Commit binds bounded demo records.
-Evidence reconstructs the bounded demo path.
-Verify checks hash/signature/reference integrity.
-Deny prevents bounded Pilot-path ToolGrant/Commit/Verify artifacts.
-UI displays the bounded path and evidence.
+UI creates a local demo artifact after allow and supplies its digest.
+Commit binds proposal, decision, and caller-supplied digest.
+Evidence reconstructs the bounded public-demo record path and distinguishes UI-derived statements.
+Verify checks stored hash/signature/reference relationships.
+For deny, the gateway rejects commit and the UI derives the absence of its bounded follow-on chain.
+This repository contains no ToolGrant subsystem.
 ```
 
 Explicit non-authorities:

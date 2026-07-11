@@ -8,7 +8,7 @@ It is a bounded public demonstration of one central idea:
 
 ```text
 An agent action should not be treated as just a prompt and an output.
-It should become a controlled, inspectable, bound, and verifiable run.
+Its bounded record path should make proposal, decision, digest binding, and integrity checks inspectable.
 ```
 
 The demo shows that idea in the smallest public form that can be understood, run locally, inspected, and audited without exposing private Core implementation or private research material.
@@ -19,12 +19,13 @@ That limitation is not an apology. It is the point. A governance system that can
 
 ## What this demo shows
 
-The public demo implements a local bounded execution path:
+The public demo implements a local bounded record path:
 
 ```text
 Proposal
   -> Gateway decision
-  -> Allowed execution artifact
+  -> UI-created local demo artifact
+  -> Caller-supplied output digest
   -> Commit
   -> Evidence
   -> Verify
@@ -36,11 +37,12 @@ The important separation is:
 |---|---|
 | Proposal | A requested action is submitted with a scoped intent. |
 | Gateway decision | A local deny-by-default gateway allows or denies the request. |
-| Execution artifact | Demo artifacts are created only after an allowed bounded path. |
-| Commit | The run is bound to the proposal, decision, and output digest. |
-| Evidence | The bounded demo path can be reconstructed. |
-| Verify | Hash, signature, and reference integrity are checked. |
-| Deny | A denied path does not produce ToolGrant, Commit, or Verify artifacts inside the bounded demo path. |
+| Local demo artifact | The UI creates a local artifact after an allow decision. |
+| Output digest | The UI computes and supplies the digest; the gateway does not receive the artifact or observe external execution. |
+| Commit | Proposal, decision, and caller-supplied output digest are bound in the demo record. |
+| Evidence | The bounded public-demo record path can be reconstructed. |
+| Verify | Stored hash, signature, and reference relationships are checked. |
+| Deny | The gateway rejects commit for a denied proposal; the UI derives the absence of its bounded follow-on chain. No ToolGrant subsystem exists in this repository. |
 
 The demo gateway is deliberately simple. Its allowlist is small. Its storage is local and in-memory. Its HMAC key is a public demo key. Its purpose is not to impress anyone with infrastructure weightlifting. Its purpose is to make the control structure visible.
 
@@ -122,10 +124,10 @@ The public repository mainly exposes zones 1, 2, 3, and 6 in a minimal local for
 |---|---|---|
 | `scope.intent` | Scoped action proposal | Demo uses a small static allowlist. |
 | Deny-by-default gateway | Gateway / Policy authority | Demo gateway is local and bounded. |
-| Commit record | Runtime binding | Demo commit binds proposal, decision, and output digest. |
-| Evidence examples | Reconstructable bounded path | Public examples are synthetic and not private runtime evidence. |
-| Verify endpoint | Hash/signature/reference integrity | Verify is not approval, authorization, certification, or governance. |
-| Deny path | Bounded path stop | Deny does not prove system-wide non-execution. |
+| Commit record | Record binding | Demo commit binds proposal, decision, and caller-supplied output digest. |
+| Evidence examples | Conceptual bounded record path | Public examples are synthetic, non-replayable, and not private runtime evidence. |
+| Verify endpoint | Stored hash/signature/reference checks | Verify is not approval, authorization, certification, or governance. |
+| Deny path | Commit rejection and UI-derived absence | Deny does not prove system-wide non-execution. |
 | Claim audit | Public claim hygiene | Audit protects public wording, not runtime security. |
 | Export audit | Public export hygiene | Audit reduces leak risk, not a complete security review. |
 
@@ -209,14 +211,14 @@ That rule is not modesty. It is the product philosophy.
 
 This repository is the first public surface of a larger VAG architecture.
 
-It demonstrates a bounded accountable execution path and the discipline around that path:
+It demonstrates a bounded accountable record path and the discipline around that path:
 
 ```text
-propose -> decide -> execute only if allowed -> commit -> evidence -> verify
+propose -> decide -> UI creates local artifact after allow -> supply digest -> commit -> evidence -> verify
 ```
 
 It does not expose the private Core, and it does not claim production governance, sandboxing, compliance, complete telemetry, or global enforcement.
 
-Its value is that it shows a controlled run can be scoped, bound, checked, and honestly described.
+Its value is that it shows a bounded record can be scoped, bound, checked, and honestly described without claiming observation of external execution.
 
 That is the bridge from this small demo to the larger VAG architecture.
