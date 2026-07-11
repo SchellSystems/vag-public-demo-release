@@ -6,41 +6,54 @@ This walkthrough demonstrates the bounded demo path through the local VAG demo g
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js `>=20.19.0`; the public demo audit workflow uses Node.js 22
+- npm
 - Terminal access
+
+Run all commands from the repository root unless a section says otherwise.
 
 ## Steps
 
-### 1. Start the Demo Gateway
+### 1. Install Dependencies
 
 ```bash
-cd demo-gateway
-node src/server.mjs
+npm ci
+```
+
+This installs the root workspaces for both `demo-gateway` and `demo-ui`.
+
+### 2. Start the Demo Gateway
+
+In the first terminal:
+
+```bash
+npm run gateway
 ```
 
 Gateway runs on `http://localhost:4400`.
 
-### 2. Start the Demo UI
+### 3. Start the Demo UI
+
+In the second terminal:
 
 ```bash
-cd demo-ui
-npm install
 npm run dev
 ```
 
 UI runs on `http://localhost:5173`.
 
-### 3. Open the Demo UI
+### 4. Open the Demo UI
 
 Navigate to `http://localhost:5173` in your browser.
 
 You will see:
+
 - Mode indicator: "Local Demo / Gateway-Bound Demo"
 - Gateway URL display
 - Non-Claims panel (always visible)
 - Demo control buttons
 
-### 4. Run Allow Path
+### 5. Run Allow Path
 
 Click **"Allow Demo"** or **"Run Gateway-Bound Demo"**:
 
@@ -52,7 +65,7 @@ Click **"Allow Demo"** or **"Run Gateway-Bound Demo"**:
 6. Verify checks integrity of committed record (HMAC-based)
 7. Deny path demonstrates negative evidence (bounded demo path only)
 
-### 5. Run Deny Path
+### 6. Run Deny Path
 
 Click **"Deny Demo"**:
 
@@ -64,9 +77,10 @@ Click **"Deny Demo"**:
 6. No Verify produced
 7. Negative evidence recorded
 
-### 6. Review Evidence
+### 7. Review Evidence
 
 The Evidence JSON block shows the complete bounded demo evidence including:
+
 - `health`, `allow_run`, `commit`, `verify`, `deny_run`
 - `bounded_demo_artifacts`
 - `negative_evidence`
@@ -78,6 +92,21 @@ The Evidence JSON block shows the complete bounded demo evidence including:
 - `deny_non_claim`: does_not_prove_system_wide_non_execution
 
 Use the **Copy** button to copy evidence to clipboard.
+
+## Validation Checklist
+
+Before submitting any change, run the repository-standard validation from the repository root:
+
+```bash
+python tools/check_claims.py .
+python tools/export_audit.py .
+npm ci
+npm audit --omit=dev
+npm test
+npm run build
+npm run smoke
+git diff --check
+```
 
 ## Non-Claims
 
