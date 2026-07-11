@@ -7,11 +7,13 @@
 **Document type:** post-public operational baseline / release-state source document  
 **Status:** `PUBLIC_DEMO_BASELINE_VERIFIED_WITH_NOTE`
 
+**Temporal scope:** dated review of the PR #10 base state; not a live pointer to the current `main` SHA
+
 ---
 
 ## 1. Purpose
 
-This document records the post-public operational state of `SchellSystems/vag-public-demo-release` after the repository became publicly visible and after the post-PR10 verification pass.
+This document records the reviewed post-public baseline of `SchellSystems/vag-public-demo-release` after the repository became publicly visible and after the post-PR10 verification pass.
 
 It exists to prevent future drift between:
 
@@ -47,18 +49,20 @@ The public repository remains a bounded local demo surface. It is not the privat
 
 ---
 
-## 3. Current Public Baseline
+## 3. Reviewed Public Baseline
 
-Current reviewed public baseline:
+Reviewed base state before this document was merged:
 
 ```text
 Repository: SchellSystems/vag-public-demo-release
 Visibility: public
 Default branch: main
-Current main SHA: c3205a59c3c63387289f5dab165b965fc0042c0e
-Latest merged PR: #10
-Latest commit message: chore(deps-dev): bump vite from 5.4.21 to 6.4.3 (#10)
+Reviewed base SHA: c3205a59c3c63387289f5dab165b965fc0042c0e
+Latest merged PR at review time: #10
+Latest commit message at review time: chore(deps-dev): bump vite from 5.4.21 to 6.4.3 (#10)
 ```
+
+The SHA above is a dated review anchor, not a perpetual pointer to the current `main` head. This document was later merged through PR #11, which necessarily advanced `main`. Current repository facts must be checked live rather than inferred from this dated file.
 
 PR #10 changed only:
 
@@ -151,7 +155,7 @@ They do not support any broader production, compliance, assurance, sandbox, isol
 
 ## 6. GitHub Actions Visibility Note
 
-Connector checks for the latest main commit:
+Connector checks for the reviewed base commit:
 
 ```text
 c3205a59c3c63387289f5dab165b965fc0042c0e
@@ -263,7 +267,7 @@ Evidence-as-compliance wording
 Evidence-as-security wording
 ```
 
-Current conclusion:
+Conclusion at review time:
 
 ```text
 No current public-surface blocker was identified from these searches and audits.
@@ -275,7 +279,7 @@ This conclusion is scoped to the reviewed repository state and does not replace 
 
 ## 10. Dependency State
 
-The current public baseline includes the PR #10 dependency update:
+The reviewed public baseline includes the PR #10 dependency update:
 
 ```text
 vite: ^6.4.3
@@ -300,6 +304,7 @@ npm audit --omit=dev
 npm test
 npm run build
 npm run smoke
+git diff --check
 ```
 
 No dependency PR should be auto-merged.
@@ -308,7 +313,7 @@ No dependency PR should be auto-merged.
 
 ## 11. Operational State
 
-Current operational state:
+Recorded operational classification for the reviewed baseline:
 
 ```text
 PUBLIC_DEMO_BASELINE_VERIFIED_WITH_NOTE
@@ -344,8 +349,8 @@ new external integration claim
 The following remain intentionally open or limited:
 
 ```text
-GitHub Actions status for latest main was not observable through connector.
-Local validation was reported from codex/main, accepted only because codex/main and main were connector-confirmed identical.
+GitHub Actions status for the reviewed base commit was not observable through the connector at review time.
+Local validation was reported from `codex/main`, accepted for that dated baseline only because `codex/main` and `main` were connector-confirmed identical at the reviewed state.
 The public demo remains bounded and local.
 No production, compliance, assurance, sandbox, isolation, telemetry, or enterprise claim is introduced.
 ```
@@ -354,7 +359,7 @@ No production, compliance, assurance, sandbox, isolation, telemetry, or enterpri
 
 ## 13. Final Baseline Verdict
 
-Final scoped verdict:
+Final scoped verdict for the reviewed baseline:
 
 ```text
 GO: public bounded demo baseline is verified with note.

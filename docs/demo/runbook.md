@@ -4,8 +4,10 @@
 
 ### Prerequisites
 
-- Node.js 18+
-- npm
+- Node.js `>=20.19.0`
+- npm (included with Node.js)
+
+The public demo audit workflow uses Node.js 22.
 
 ### Install Dependencies
 
@@ -65,6 +67,8 @@ Before submitting any changes, run:
 python tools/check_claims.py .
 python tools/export_audit.py .
 npm ci
+npm audit --omit=dev
+npm test
 npm run build
 npm run smoke
 git diff --check
