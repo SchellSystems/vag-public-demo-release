@@ -64,6 +64,7 @@ npm run smoke
 Before submitting any changes, run:
 
 ```bash
+python -m unittest discover -s test/audit -p 'test_*.py'
 python tools/check_claims.py .
 python tools/export_audit.py .
 npm ci
@@ -75,6 +76,12 @@ git diff --check
 ```
 
 All must pass without hard failures.
+
+For audit-tool changes, the unittest command is the PR-03A fixture gate. It
+creates temporary claim and export fixtures, checks the public-repository
+structural rules, and runs regression coverage against the current repository
+content. The fixtures do not add private material or runtime evidence to the
+repository.
 
 ## Troubleshooting
 
