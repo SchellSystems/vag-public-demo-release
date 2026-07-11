@@ -2,7 +2,7 @@
 
 [![Public Demo Audit](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml/badge.svg)](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml)
 
-VAG Public Demo is a bounded local demonstration of inspectable agent execution control: proposal, gateway decision, commit, evidence, and verify.
+VAG Public Demo is a bounded local demonstration of an inspectable proposal, decision, artifact-digest, commit, evidence, and verify path.
 
 The repository is intentionally small. It shows one reviewable path clearly instead of presenting a larger system than the public demo contains.
 
@@ -18,17 +18,18 @@ Start here if you are evaluating the repository for the first time:
 
 - A scoped proposal enters the local demo gateway.
 - The gateway returns an explicit allow or deny decision.
-- Allowed bounded demo paths can produce commit and evidence artifacts.
-- Denied bounded demo paths do not produce ToolGrant, Commit, or Verify artifacts.
-- Verify checks hash, signature, and reference integrity for the bounded demo record.
+- After an allow decision, the UI creates a local demo artifact and supplies its digest to the gateway.
+- Commit binds the proposal, decision, and caller-supplied `output_digest`.
+- A denied proposal cannot be committed; the UI records the absence of its bounded follow-on artifact chain.
+- Verify checks stored hash, signature, and reference relationships for the bounded demo record.
 
 ## Demo Flow
 
 ```text
 Agent Proposal
   -> Gateway Decision
-      -> allow -> bounded demo artifact -> Commit -> Evidence -> Verify
-      -> deny  -> no ToolGrant / no Commit / no Verify in the bounded path
+      -> allow -> UI-created demo artifact -> caller-supplied digest -> Commit -> Evidence -> Verify
+      -> deny  -> Commit rejected / UI records no bounded follow-on chain
 ```
 
 ## Components
@@ -70,12 +71,14 @@ The demo gateway listens on `:4400`. The demo UI runs on `:5173`.
 
 ```text
 Agent proposes.
-Gateway decides within a bounded demo/Core contract.
-Execution artifacts are created only after an allowed bounded path.
-Commit binds a demo run to proposal and decision context.
-Evidence reconstructs a bounded demo path.
-Verify checks hash, signature, and reference integrity.
-Deny stops the bounded Pilot path from producing ToolGrant, Commit, and Verify artifacts.
+Gateway decides within a bounded public-demo contract.
+After allow, the UI creates a local demo artifact and computes its digest.
+The gateway receives the caller-supplied `output_digest`; it does not observe external execution.
+Commit binds proposal, decision, and digest.
+Evidence reconstructs the bounded public-demo record path.
+Verify checks stored hash, signature, and reference relationships.
+For deny, the commit endpoint rejects the proposal and the UI derives the absence of its bounded follow-on chain.
+This repository contains no ToolGrant subsystem.
 ```
 
 ## Non-Claims
@@ -118,7 +121,7 @@ Also:
 
 ## Repository Status
 
-This repository is a public bounded local demo. It illustrates a reviewable agent execution control path and remains limited to the repository scope described in the documentation. No real external workflow integration, global execution control, or certification is implied.
+This repository is a public bounded local demo. It illustrates a reviewable proposal-decision-artifact-digest-commit-evidence-verify path and remains limited to the repository scope described in the documentation. No real external workflow integration, global execution control, or certification is implied.
 
 ## License
 

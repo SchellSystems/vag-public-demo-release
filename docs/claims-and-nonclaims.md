@@ -5,21 +5,24 @@
 The following claims are allowed, only with scope:
 
 - VAG demonstrates a bounded accountable demo path.
-- VAG keeps decision, execution, commit, evidence, and verify concepts distinct.
-- Commit binds bounded demo artifacts to proposal/decision context.
-- Verify checks hash/signature/reference integrity.
+- VAG keeps proposal, decision, local artifact creation, digest binding, commit, evidence, and verify concepts distinct.
+- After allow, the UI creates a local demo artifact and supplies its digest.
+- Commit binds proposal, decision, and caller-supplied digest.
+- Verify checks stored hash/signature/reference relationships.
 - Evidence can reconstruct a bounded demo path.
-- Deny prevents bounded Pilot-path ToolGrant/Commit/Verify artifacts.
+- The gateway rejects commit for a denied proposal.
+- The UI can report that no local artifact, Commit, or Verify followed in its bounded public-demo path.
+- This repository contains no ToolGrant subsystem.
 
 ## Cautious Claims
 
 The following terms may be used only with explicit limitation and non-claims:
 
-- controlled agent execution
 - bounded agent intent review
+- bounded public-demo record path
 - public demo candidate
 - review-ready demo material
-- runtime-verified demo path
+- integrity-checked demo record
 
 These terms must always be accompanied by scope qualifiers and non-claims.
 
@@ -59,12 +62,13 @@ It does not mean approval, authorization, safety, or compliance.
 
 ### VERIFY_OK
 
-Means hash/signature/reference integrity check passed within scope.
+Means an actual runtime hash/signature/reference check passed within scope.
 It does not mean governance approval.
+Synthetic, conceptual, or non-replayable examples must not present `VERIFY_OK` as an executed result.
 
-### runtime_verified
+### runtime_demo_integrity_verified
 
-Means the demo path was verified against the defined bounded runtime/demo flow.
+Means the gateway checked the stored demo record relationships defined by the bounded runtime/demo flow.
 It does not mean production runtime, full telemetry, or external certification.
 
 ## Human Review Checklist

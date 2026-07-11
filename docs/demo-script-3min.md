@@ -8,21 +8,21 @@ Explain the bounded VAG demo concept in approximately 3 minutes.
 
 ### Introduction (30 seconds)
 
-VAG demonstrates verifiable agent execution control within a bounded demo path. An agent proposes an action, a Gateway decides, and the result is committed with evidence that can be verified.
+VAG demonstrates a bounded public-demo record path. An agent proposes an action, the local demo gateway decides, the UI may create a local artifact after allow, and a caller-supplied digest can be committed and checked.
 
 ### Core Flow (90 seconds)
 
 1. **Proposal**: An agent proposes an action within a bounded demo context.
-2. **Gateway Decision**: The Gateway evaluates the proposal within a bounded demo/Core contract and decides to allow or deny.
-3. **Allow Path**: If allowed, execution proceeds. A Commit binds the result to the proposal and decision. Evidence records the bounded demo path. Verify checks integrity.
-4. **Deny Path**: If denied, no ToolGrant is issued. No Commit is created. No Verify artifacts are produced. The bounded Pilot path stops.
+2. **Gateway Decision**: The Gateway evaluates the proposal within a bounded public-demo contract and decides to allow or deny.
+3. **Allow Path**: After allow, the UI creates a local demo artifact and supplies its digest. Commit binds proposal, decision, and digest. Evidence records the bounded public-demo path. Verify checks stored hash, signature, and reference relationships.
+4. **Deny Path**: If denied, the commit endpoint rejects the proposal and the UI derives that no local artifact, Commit, or Verify follows in its bounded path. This repository has no ToolGrant subsystem.
 
 ### Key Points (60 seconds)
 
-- Every step is recorded and verifiable within scope.
+- The bounded record path is inspectable within scope.
 - Verify checks hash, signature, and reference integrity — it does not approve or authorize.
 - Evidence reconstructs the bounded demo path — it does not prove compliance or security.
-- Deny stops the bounded Pilot path — it does not prove system-wide non-execution.
+- The UI-derived deny result is limited to the bounded public-demo path — it does not prove system-wide non-execution.
 
 ## Non-Claims
 

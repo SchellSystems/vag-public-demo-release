@@ -1,51 +1,39 @@
-# Authority Boundaries
+# Authority Boundaries — Public Demo Summary
 
-## Authority Matrix
+## Status
 
-### Gateway / Policy
-Decides whether a proposed action is allowed within the bounded demo/Core contract.
+This file is a non-authoritative navigation summary for the public demo repository. The detailed public-demo authority definition is [docs/architecture/authority-boundaries.md](architecture/authority-boundaries.md).
+
+This summary does not define private Core, Pilot, Lite, DRE, Observed Surface, Deviation, Agent-Control, or Contextmarker authority.
+
+## Public-Demo Roles
+
+### Demo Gateway
+
+Decides allow or deny within the bounded public-demo contract. For an allowed proposal, it can bind the proposal, decision, and caller-supplied digest. It does not receive the local artifact or observe external execution.
+
+### Demo UI
+
+Submits proposals, creates a local demo artifact after allow, supplies its digest, displays gateway responses, and assembles bounded review material. Its negative-evidence statements are UI-derived.
 
 ### Commit
-Binds execution artifacts to proposal and decision context.
+
+Binds proposal, decision, and caller-supplied `output_digest` in the demo record.
 
 ### Evidence
-Records and reconstructs bounded paths.
+
+Reconstructs the bounded public-demo record path and distinguishes gateway records from UI-derived statements.
 
 ### Verify
-Checks integrity and explains reference status.
 
-### DRE (Declared Runtime Envelope)
-Declares intended work surface.
+Checks stored hash, signature, and proposal/decision reference relationships. It does not approve, authorize, certify, or govern.
 
-### Observed Surface
-Observes bounded/pilot surface.
+## Repository Separation
 
-### Deviation
-Compares declared and observed surfaces and recommends.
+- The public demo is not the private Core.
+- The public demo is not the Controlled Agent Pilot.
+- The public demo is not VAG-lite.
+- This repository contains no ToolGrant subsystem.
+- Deny does not prove system-wide non-execution.
 
-### Pilot
-Demonstrates bounded behavior.
-
-### Lite
-Supports addon/browser/cartography context.
-
-### vag-public-demo
-Bounded public demo documentation/runtime surface.
-
-## Forbidden Authority Collapses
-
-The following authority collapses are explicitly forbidden:
-
-- Evidence becomes Policy
-- Verify becomes Governance
-- DRE becomes Authorization
-- Deviation blocks independently
-- Pilot becomes Core
-- Lite becomes Core
-- Demo Repo becomes Release Surface
-- Deny becomes Sandbox
-- Observed Surface becomes Full Telemetry
-
-## Explanation
-
-Each component has a defined and bounded role. No component may assume the authority of another. These boundaries are architectural invariants that must be preserved in all documentation, demo scripts, and public-facing material.
+No component in this repository may assume authority outside the bounded public-demo contract.

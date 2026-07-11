@@ -60,10 +60,11 @@ Click **"Allow Demo"** or **"Run Gateway-Bound Demo"**:
 1. Gateway health check
 2. Proposal submitted with `scope.intent: demo.transform_json`
 3. Gateway allows the proposal (returns `decision_id`)
-4. Bounded demo artifacts created (only after gateway allow)
-5. Commit sent to gateway with `output_digest` and `decision_id`
-6. Verify checks integrity of committed record (HMAC-based)
-7. Deny path demonstrates negative evidence (bounded demo path only)
+4. UI creates a local demo artifact after gateway allow
+5. UI computes and supplies `output_digest` with `decision_id`
+6. Commit binds proposal, decision, and the caller-supplied digest
+7. Verify checks stored hash, signature, and reference relationships
+8. Deny path demonstrates UI-derived negative evidence (bounded public-demo path only)
 
 ### 6. Run Deny Path
 
@@ -72,14 +73,14 @@ Click **"Deny Demo"**:
 1. Gateway health check
 2. Proposal submitted with forbidden intent
 3. Gateway denies the proposal
-4. No ToolGrant produced
-5. No Commit produced
-6. No Verify produced
-7. Negative evidence recorded
+4. The bounded UI flow creates no local demo artifact
+5. No Commit or Verify follows in that UI flow
+6. The gateway would reject a commit attempt for the denied proposal
+7. UI-derived negative evidence is recorded for this bounded path
 
 ### 7. Review Evidence
 
-The Evidence JSON block shows the complete bounded demo evidence including:
+The Evidence JSON block shows UI-assembled bounded demo review material including:
 
 - `health`, `allow_run`, `commit`, `verify`, `deny_run`
 - `bounded_demo_artifacts`
@@ -90,6 +91,8 @@ The Evidence JSON block shows the complete bounded demo evidence including:
 - `negative_evidence_scope`: bounded_demo_path_only
 - `negative_evidence_source`: ui_derived_from_gateway_deny
 - `deny_non_claim`: does_not_prove_system_wide_non_execution
+
+The gateway receives the digest, not the local artifact, and does not observe external execution. The repository contains no ToolGrant subsystem.
 
 Use the **Copy** button to copy evidence to clipboard.
 
