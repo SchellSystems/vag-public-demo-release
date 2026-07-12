@@ -10,11 +10,18 @@ import {
   sha256,
   verify,
 } from '../demo-gateway/src/core.mjs';
+import { verifySignatureRelationships } from '../demo-gateway/src/internal/signature-integrity.mjs';
 
 const VALID_DIGEST = 'a'.repeat(64);
 const OTHER_VALID_DIGEST = 'b'.repeat(64);
 const INVALID_DIGEST = 'A'.repeat(64);
 const ZERO_HASH = '0'.repeat(64);
+
+function tamperSignature(signature) {
+  return signature.startsWith('0')
+    ? `1${signature.slice(1)}`
+    : `0${signature.slice(1)}`;
+}
 
 function allowProposal() {
   return propose({
@@ -257,9 +264,7 @@ describe('gateway core verify behavior', () => {
 
   it('detects tampered signatures for known record hashes', () => {
     const record = committedRecord();
-    const tamperedSignature = record.signature.startsWith('0')
-      ? `1${record.signature.slice(1)}`
-      : `0${record.signature.slice(1)}`;
+    const tamperedSignature = tamperSignature(record.signature);
 
     const result = verify({
       record_hash: record.record_hash,
@@ -269,6 +274,23 @@ describe('gateway core verify behavior', () => {
     assert.equal(result.error, 'tampered_signature');
     assert.equal(result.integrity, false);
     assert.equal(result.signature_integrity, false);
+  });
+
+  it('checks stored-signature tampering in the pure signature relationship helper', () => {
+    const record = committedRecord();
+    const tamperedStoredSignature = tamperSignature(record.signature);
+
+    // Helper-level regression: this does not mutate the internal commits Map.
+    assert.equal(verifySignatureRelationships(
+      record.signature,
+      record.signature,
+      record.signature,
+    ), true);
+    assert.equal(verifySignatureRelationships(
+      record.signature,
+      record.signature,
+      tamperedStoredSignature,
+    ), false);
   });
 
   it('rejects invalid verify bodies', () => {

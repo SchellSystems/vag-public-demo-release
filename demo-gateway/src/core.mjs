@@ -5,7 +5,9 @@
  * No external calls, no shell, no cloud, no HTTP client imports.
  */
 
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
+
+import { verifySignatureRelationships } from './internal/signature-integrity.mjs';
 
 // --- Allowlist ---
 const ALLOWED_INTENTS = new Set(['demo.transform_json', 'demo.ping']);
@@ -247,10 +249,11 @@ export function verify(body) {
     proposal.decision_id === found.decision_id &&
     proposal.scope_intent === found.scope_intent;
 
-  // Timing-safe comparison
-  const sigBuffer = Buffer.from(signature, 'hex');
-  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-  const signatureIntegrity = timingSafeEqual(sigBuffer, expectedBuffer);
+  const signatureIntegrity = verifySignatureRelationships(
+    expectedSignature,
+    signature,
+    found.signature,
+  );
   const valid = hashIntegrity && signatureIntegrity && referenceIntegrity;
 
   if (!signatureIntegrity) {
