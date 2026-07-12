@@ -102,23 +102,33 @@ def check_package_lock(content, rel_path):
     except (json.JSONDecodeError, ValueError):
         return [(rel_path, 0, "invalid package-lock.json", "FAIL")]
 
-    def walk(value):
+    source_keys = {"resolved", "version"}
+    dependency_map_keys = {
+        "dependencies", "devDependencies", "optionalDependencies", "peerDependencies"
+    }
+
+    def check_source(source, source_label):
+        lowered = source.lower()
+        if lowered.startswith(("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")):
+            findings.append((rel_path, 0, f"non-public lockfile {source_label}", "FAIL"))
+        elif source.startswith(("http://", "https://")):
+            parsed = urlparse(source)
+            if parsed.username or parsed.password:
+                findings.append((rel_path, 0, "credential-bearing lockfile URL", "FAIL"))
+            elif parsed.hostname != "registry.npmjs.org":
+                findings.append((rel_path, 0, "non-public npm registry", "FAIL"))
+
+    def walk(value, parent_key=None):
         if isinstance(value, dict):
             for key, item in value.items():
-                if key == "resolved" and isinstance(item, str):
-                    lowered = item.lower()
-                    if lowered.startswith(("file:", "git+", "git://", "ssh:")):
-                        findings.append((rel_path, 0, "non-public lockfile resolved URL", "FAIL"))
-                    elif item.startswith(("http://", "https://")):
-                        parsed = urlparse(item)
-                        if parsed.username or parsed.password:
-                            findings.append((rel_path, 0, "credential-bearing lockfile URL", "FAIL"))
-                        elif parsed.hostname != "registry.npmjs.org":
-                            findings.append((rel_path, 0, "non-public npm registry", "FAIL"))
-                walk(item)
+                if isinstance(item, str) and (
+                    key in source_keys or parent_key in dependency_map_keys
+                ):
+                    check_source(item, key)
+                walk(item, key)
         elif isinstance(value, list):
             for item in value:
-                walk(item)
+                walk(item, parent_key)
 
     walk(data)
     return findings

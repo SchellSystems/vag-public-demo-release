@@ -22,11 +22,11 @@ class ClaimRule:
 CLAIM_RULES = [
     ClaimRule("production readiness", re.compile(r"\b(?:production[\s-]?(?:ready|grade)|ready\s+for\s+production|public[\s-]?ready)\b", re.I)),
     ClaimRule("compliance claim", re.compile(r"\b(?:compliance[\s-]?(?:ready|certified)|certified\s+compliant|compliance\s+proof|proves?\s+compliance)\b", re.I)),
-    ClaimRule("security claim", re.compile(r"\b(?:security[\s-]?(?:ready|guarantee)|certified\s+secure|secure\s+by\s+design)\b", re.I)),
+    ClaimRule("security claim", re.compile(r"\b(?:security[\s-]?(?:ready|guarantee)|certified\s+secure|secure\s+by\s+design|(?:is|are)\s+secure|provides?\s+security(?!\s+(?:policy|documentation|guidance|contact|reporting|review|notice))|guarantees?\s+security)\b", re.I)),
     ClaimRule("sandbox claim", re.compile(r"\b(?:(?:is|provides?|creates?|implements?)\s+(?:an?\s+)?sandbox|sandboxed)\b", re.I)),
     ClaimRule("isolation claim", re.compile(r"\b(?:(?:provides?|ensures?|guarantees?|implements?)\s+(?:os|browser|network|process|filesystem|system)?[\s-]*isolation|(?:os|browser|network|process|filesystem)[\s-]+level\s+isolation)\b", re.I)),
     ClaimRule("enterprise claim", re.compile(r"\b(?:enterprise[\s-]?(?:ready|grade)|enterprise\s+security(?:\s+(?:platform|product))?|enterprise[\s-]security[\s-]certified)\b", re.I)),
-    ClaimRule("external integration claim", re.compile(r"\b(?:externally\s+integrated|integrated\s+with\s+(?:an?\s+)?(?:external|third[\s-]party|named)|external\s+(?:production\s+platform|platform|workflow)\s+integration|regulated\s+external\s+workflow\s+integration|production\s+transaction\s+workflow)\b", re.I)),
+    ClaimRule("external integration claim", re.compile(r"\b(?:externally\s+integrated|integrated\s+with\s+(?:(?:an?|the)\s+)?[A-Za-z][A-Za-z0-9.+-]*(?:\s+[A-Za-z][A-Za-z0-9.+-]*){0,2}|external\s+(?:production\s+platform|platform|workflow)\s+integration|regulated\s+external\s+workflow\s+integration|production\s+transaction\s+workflow)\b", re.I)),
     ClaimRule("system-wide claim", re.compile(r"\bsystem[\s-]wide\s+(?:enforcement|blocking|blockade|non[\s-]execution)\b", re.I)),
     ClaimRule("execution blocking claim", re.compile(r"\b(?:blocks?|prevents?|guarantees?)\s+(?:all\s+|external\s+|system[\s-]wide\s+)?(?:execution|network|browser|filesystem|os\s+execution)\b", re.I)),
     ClaimRule("ToolGrant subsystem claim", re.compile(r"\bToolGrant\s+(?:subsystem|system|service|issued|produced)\b", re.I)),

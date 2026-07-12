@@ -54,6 +54,18 @@ class ClaimAuditTests(unittest.TestCase):
         }
         self.assert_passes(files)
 
+    def test_named_platform_integration_claim_and_non_claim(self):
+        claim = "The demo is integrated with " + "AWS."
+        non_claim = "The demo is not integrated with " + "AWS."
+        self.assert_fails({"claim.md": claim})
+        self.assert_passes({"non-claim.md": non_claim})
+
+    def test_direct_security_claim_and_non_claim(self):
+        claim = "The public demo is " + "secure."
+        non_claim = "The public demo is not " + "secure."
+        self.assert_fails({"claim.md": claim})
+        self.assert_passes({"non-claim.md": non_claim})
+
     def test_positive_sentence_inside_non_claim_section_fails(self):
         claim = "This demo is production" + "-ready."
         self.assert_fails({"README.md": "## Non-Claims\n\n" + claim + "\n"})

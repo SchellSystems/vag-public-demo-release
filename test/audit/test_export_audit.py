@@ -82,6 +82,13 @@ class ExportAuditTests(unittest.TestCase):
         }
         self.assert_passes({"package-lock.json": json.dumps(lock)})
 
+    def test_semver_lock_version_passes(self):
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {"node_modules/pkg": {"version": "1.2.3"}},
+        }
+        self.assert_passes({"package-lock.json": json.dumps(lock)})
+
     def test_private_or_file_lock_source_fails(self):
         sources = [
             "file:" + "../private-package",
@@ -92,6 +99,19 @@ class ExportAuditTests(unittest.TestCase):
             with self.subTest(source=source):
                 lock = {"lockfileVersion": 3, "packages": {"pkg": {"resolved": source}}}
                 self.assert_fails({"package-lock.json": json.dumps(lock)})
+
+    def test_private_git_lock_version_fails(self):
+        source = "git+ssh:" + "//git@github.com/SchellSystems/private-repo.git"
+        lock = {"lockfileVersion": 3, "packages": {"pkg": {"version": source}}}
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
+
+    def test_private_git_dependency_specifier_fails(self):
+        source = "git+https:" + "//github.com/SchellSystems/private-repo.git"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {"": {"dependencies": {"private-pkg": source}}},
+        }
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
 
     def test_valid_conceptual_evidence_passes(self):
         self.assert_passes({
