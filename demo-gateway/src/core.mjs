@@ -5,7 +5,9 @@
  * No external calls, no shell, no cloud, no HTTP client imports.
  */
 
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
+
+import { verifySignatureRelationships } from './internal/signature-integrity.mjs';
 
 // --- Allowlist ---
 const ALLOWED_INTENTS = new Set(['demo.transform_json', 'demo.ping']);
@@ -32,26 +34,6 @@ export function sha256(data) {
  */
 function hmacSha256(data) {
   return createHmac('sha256', DEMO_HMAC_KEY).update(data, 'utf8').digest('hex');
-}
-
-/**
- * Check supplied and stored signatures against the expected record HMAC.
- * Pure helper used by verify and targeted integrity regression tests.
- */
-export function verifySignatureRelationships(recordHash, suppliedSignature, storedSignature) {
-  if (!HEX64_RE.test(recordHash)) {
-    return false;
-  }
-
-  const expectedSignature = hmacSha256(recordHash);
-  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-  const matchesExpected = (candidate) => (
-    typeof candidate === 'string' &&
-    HEX64_RE.test(candidate) &&
-    timingSafeEqual(Buffer.from(candidate, 'hex'), expectedBuffer)
-  );
-
-  return matchesExpected(suppliedSignature) && matchesExpected(storedSignature);
 }
 
 /**
@@ -251,6 +233,7 @@ export function verify(body) {
     return { error: 'unknown_record_hash', message: 'No committed record matches this hash.' };
   }
 
+  const expectedSignature = hmacSha256(record_hash);
   const canonicalRecord = canonicalJson({
     proposal_id: found.proposal_id,
     decision_id: found.decision_id,
@@ -267,7 +250,7 @@ export function verify(body) {
     proposal.scope_intent === found.scope_intent;
 
   const signatureIntegrity = verifySignatureRelationships(
-    record_hash,
+    expectedSignature,
     signature,
     found.signature,
   );

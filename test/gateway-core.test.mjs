@@ -9,8 +9,8 @@ import {
   reset,
   sha256,
   verify,
-  verifySignatureRelationships,
 } from '../demo-gateway/src/core.mjs';
+import { verifySignatureRelationships } from '../demo-gateway/src/internal/signature-integrity.mjs';
 
 const VALID_DIGEST = 'a'.repeat(64);
 const OTHER_VALID_DIGEST = 'b'.repeat(64);
@@ -276,17 +276,18 @@ describe('gateway core verify behavior', () => {
     assert.equal(result.signature_integrity, false);
   });
 
-  it('detects a tampered stored commit signature relationship', () => {
+  it('checks stored-signature tampering in the pure signature relationship helper', () => {
     const record = committedRecord();
     const tamperedStoredSignature = tamperSignature(record.signature);
 
+    // Helper-level regression: this does not mutate the internal commits Map.
     assert.equal(verifySignatureRelationships(
-      record.record_hash,
+      record.signature,
       record.signature,
       record.signature,
     ), true);
     assert.equal(verifySignatureRelationships(
-      record.record_hash,
+      record.signature,
       record.signature,
       tamperedStoredSignature,
     ), false);
