@@ -35,6 +35,26 @@ function hmacSha256(data) {
 }
 
 /**
+ * Check supplied and stored signatures against the expected record HMAC.
+ * Pure helper used by verify and targeted integrity regression tests.
+ */
+export function verifySignatureRelationships(recordHash, suppliedSignature, storedSignature) {
+  if (!HEX64_RE.test(recordHash)) {
+    return false;
+  }
+
+  const expectedSignature = hmacSha256(recordHash);
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+  const matchesExpected = (candidate) => (
+    typeof candidate === 'string' &&
+    HEX64_RE.test(candidate) &&
+    timingSafeEqual(Buffer.from(candidate, 'hex'), expectedBuffer)
+  );
+
+  return matchesExpected(suppliedSignature) && matchesExpected(storedSignature);
+}
+
+/**
  * Recursively sort object keys for canonical JSON serialization.
  */
 export function canonicalJson(value) {
@@ -231,7 +251,6 @@ export function verify(body) {
     return { error: 'unknown_record_hash', message: 'No committed record matches this hash.' };
   }
 
-  const expectedSignature = hmacSha256(record_hash);
   const canonicalRecord = canonicalJson({
     proposal_id: found.proposal_id,
     decision_id: found.decision_id,
@@ -247,10 +266,11 @@ export function verify(body) {
     proposal.decision_id === found.decision_id &&
     proposal.scope_intent === found.scope_intent;
 
-  // Timing-safe comparison
-  const sigBuffer = Buffer.from(signature, 'hex');
-  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-  const signatureIntegrity = timingSafeEqual(sigBuffer, expectedBuffer);
+  const signatureIntegrity = verifySignatureRelationships(
+    record_hash,
+    signature,
+    found.signature,
+  );
   const valid = hashIntegrity && signatureIntegrity && referenceIntegrity;
 
   if (!signatureIntegrity) {
