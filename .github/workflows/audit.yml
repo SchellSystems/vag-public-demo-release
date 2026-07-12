@@ -12,10 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check changed-line whitespace
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          zero_sha="0000000000000000000000000000000000000000"
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --check "${BASE_SHA}...${HEAD_SHA}"
+          elif [[ "$BEFORE_SHA" == "$zero_sha" ]]; then
+            git show --check --format= "$CURRENT_SHA"
+          else
+            git diff --check "${BEFORE_SHA}..${CURRENT_SHA}"
+          fi
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
+      - name: Run audit fixture tests
+        run: python -m unittest discover -s test/audit -p 'test_*.py'
 
       - uses: actions/setup-node@v4
         with:
