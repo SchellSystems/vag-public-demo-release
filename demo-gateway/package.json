@@ -2,7 +2,7 @@
   "name": "vag-demo-gateway",
   "version": "0.1.0",
   "private": true,
-  "license": "AGPL-3.0-or-later",
+  "license": "Apache-2.0",
   "type": "module",
   "description": "Local bounded demo gateway for VAG public demo. No external calls, no cloud, no shell.",
   "scripts": {
