@@ -34,7 +34,7 @@ class T(unittest.TestCase):
     def test_force_push_fetches_missing_before(self):
         origin=Path(self.repo.tmp.name)/'origin.git'; git(Path(self.repo.tmp.name),'init','--bare',str(origin)); git(self.repo.path,'remote','add','origin',str(origin))
         before=self.repo.commit('before\n','before'); git(self.repo.path,'push','origin','main'); after=self.repo.commit('after\n','after'); git(self.repo.path,'push','origin','main')
-        shallow=Path(self.repo.tmp.name)/'shallow'; run(['git','clone','--depth=1',f'file://{origin}',str(shallow)],Path(self.repo.tmp.name)); shutil.copy2(SCRIPT,shallow/'check.sh')
+        shallow=Path(self.repo.tmp.name)/'shallow'; run(['git','clone','--depth=1','file:' + '//' + str(origin),str(shallow)],Path(self.repo.tmp.name)); shutil.copy2(SCRIPT,shallow/'check.sh')
         self.assertNotEqual(run(['git','cat-file','-e',f'{before}^{{commit}}'],shallow,check=False).returncode,0)
         e=os.environ.copy(); e.update(EVENT_NAME='push',REF_NAME='refs/heads/main',DELETED='false',BEFORE_SHA=before,AFTER_SHA=after)
         r=subprocess.run(['bash','check.sh'],cwd=shallow,env=e,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE); self.assertEqual(r.returncode,0,r.stderr); self.assertIn('attempting targeted fetch',r.stderr)
