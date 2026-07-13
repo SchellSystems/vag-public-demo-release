@@ -280,6 +280,9 @@ This conclusion is scoped to the reviewed repository state and does not replace 
 
 ## 10. Dependency State
 
+License note (2026-07-13): the repository owner migrated the project license to Apache-2.0. The root LICENSE and current package metadata are authoritative; the earlier reviewed license field in this dated baseline is superseded.
+
+
 The reviewed public baseline includes the PR #10 dependency update:
 
 ```text
@@ -291,7 +294,7 @@ Root package state remains:
 ```text
 package name: vag-public-demo-release
 private: true
-license: AGPL-3.0-or-later
+license: Apache-2.0
 node engine: >=20.19.0
 ```
 

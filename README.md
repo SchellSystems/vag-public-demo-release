@@ -125,12 +125,8 @@ This repository is a public bounded local demo. It illustrates a reviewable prop
 
 ## License
 
-This project is licensed under the GNU Affero General Public License version 3 or later. See [LICENSE](LICENSE) for details.
-
-## Commercial / Pilot Use
-
-The demo is distributed under AGPL-3.0-or-later. Commercial pilot, integration, hosted, or proprietary use may require a separate written agreement or commercial license from the repository owner.
+This project is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions are welcome subject to our Contributor License Agreement (CLA). See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+Contributions are welcome under the Apache License, Version 2.0. See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
