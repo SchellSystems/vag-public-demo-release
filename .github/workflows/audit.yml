@@ -27,7 +27,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.event.after }}
-        run: .github/scripts/check_changed_whitespace.sh
+        run: bash .github/scripts/check_changed_whitespace.sh
 
       - uses: actions/setup-python@v5
         with:
