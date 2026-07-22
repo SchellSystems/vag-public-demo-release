@@ -30,7 +30,7 @@ In the first terminal:
 npm run gateway
 ```
 
-Gateway runs on `http://localhost:4400`.
+Gateway runs on `http://127.0.0.1:4400`.
 
 ### 3. Start the Demo UI
 
@@ -40,11 +40,11 @@ In the second terminal:
 npm run dev
 ```
 
-UI runs on `http://localhost:5173`.
+UI runs on `http://127.0.0.1:5173`.
 
 ### 4. Open the Demo UI
 
-Navigate to `http://localhost:5173` in your browser.
+Navigate to `http://127.0.0.1:5173` in your browser.
 
 You will see:
 
@@ -88,7 +88,7 @@ The Evidence JSON block shows UI-assembled bounded demo review material includin
 - `demo_passed` (true only with full allow+commit+verify+deny chain and all invariants met)
 - `truth_surface`, `truth_boundaries`, `non_claims`
 - `source`, `truth_status`
-- `negative_evidence_scope`: bounded_demo_path_only
+- `negative_evidence_scope`: bounded_ui_path_only
 - `negative_evidence_source`: ui_derived_from_gateway_deny
 - `deny_non_claim`: does_not_prove_system_wide_non_execution
 
