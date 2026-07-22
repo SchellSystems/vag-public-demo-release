@@ -1,8 +1,8 @@
 /**
  * Gateway HTTP contract tests — whitepaper §18.2
  *
- * Spawns demo-gateway as a child process on an ephemeral port bound to
- * 127.0.0.1. Guarantees process teardown. Does not treat loopback as a
+ * Spawns demo-gateway as a child process on an ephemeral port.
+ * Guarantees process teardown. Does not treat loopback as a
  * sandbox or isolation boundary.
  */
 
@@ -20,6 +20,7 @@ const SERVER_SCRIPT = join(REPO_ROOT, 'demo-gateway', 'src', 'server.mjs');
 
 const ALLOWED_ORIGIN = 'http://127.0.0.1:5173';
 const VALID_DIGEST = 'a'.repeat(64);
+const SERVER_DEFAULT_HOST = '127.0.0.1';
 
 /** Find a free TCP port on 127.0.0.1. */
 function freePort() {
@@ -35,22 +36,32 @@ function freePort() {
 
 let gatewayProc = null;
 let baseUrl = '';
-let listenHost = '';
 let listenPort = 0;
+let defaultStdout = '';
 
-async function startGateway(envExtra = {}) {
+/**
+ * Start gateway as child process.
+ *
+ * DEMO_GATEWAY_HOST is ONLY set when options.DEMO_GATEWAY_HOST is provided.
+ * Ambient DEMO_GATEWAY_HOST is deleted so the server default is exercised.
+ */
+async function startGateway(options = {}) {
   const port = await freePort();
-  const host = envExtra.DEMO_GATEWAY_HOST || '127.0.0.1';
+
+  const env = { ...process.env };
+  delete env.DEMO_GATEWAY_HOST;
+  env.DEMO_GATEWAY_PORT = String(port);
+  env.DEMO_UI_ORIGIN = ALLOWED_ORIGIN;
+
+  let bindHost = SERVER_DEFAULT_HOST;
+  if (Object.prototype.hasOwnProperty.call(options, 'DEMO_GATEWAY_HOST')) {
+    env.DEMO_GATEWAY_HOST = options.DEMO_GATEWAY_HOST;
+    bindHost = options.DEMO_GATEWAY_HOST;
+  }
 
   const proc = spawn(process.execPath, [SERVER_SCRIPT], {
     cwd: REPO_ROOT,
-    env: {
-      ...process.env,
-      DEMO_GATEWAY_HOST: host,
-      DEMO_GATEWAY_PORT: String(port),
-      DEMO_UI_ORIGIN: ALLOWED_ORIGIN,
-      ...envExtra,
-    },
+    env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
@@ -60,23 +71,26 @@ async function startGateway(envExtra = {}) {
   });
   proc.stderr.on('data', () => {});
 
-  const url = `http://${host}:${port}`;
+  // Probe via the expected bind host.
+  const url = `http://${bindHost}:${port}`;
   for (let i = 0; i < 40; i++) {
     try {
       const res = await fetch(`${url}/health`);
       if (res.ok) {
-        return { proc, url, host, port, stdout };
+        return { proc, url, host: bindHost, port, stdout };
       }
     } catch {
       // not ready
     }
     if (proc.exitCode !== null) {
-      throw new Error(`gateway exited early with code ${proc.exitCode}`);
+      throw new Error(
+        `gateway exited early with code ${proc.exitCode}; stdout=${stdout}`,
+      );
     }
     await sleep(100);
   }
   proc.kill('SIGTERM');
-  throw new Error(`gateway did not become ready on ${url}`);
+  throw new Error(`gateway did not become ready on ${url}; stdout=${stdout}`);
 }
 
 function stopGateway(proc) {
@@ -124,11 +138,12 @@ async function jsonRequest(method, path, body, headers = {}) {
 }
 
 before(async () => {
+  // Suite-level gateway: NO DEMO_GATEWAY_HOST → server default 127.0.0.1
   const started = await startGateway();
   gatewayProc = started.proc;
   baseUrl = started.url;
-  listenHost = started.host;
   listenPort = started.port;
+  defaultStdout = started.stdout;
 });
 
 after(async () => {
@@ -161,7 +176,6 @@ describe('HTTP CORS (§18.2 #36 #43)', () => {
       headers: { Origin: 'http://evil.example' },
     });
     assert.equal(res.status, 200);
-    // Server always emits the configured origin, never the request Origin.
     assert.equal(res.headers.get('access-control-allow-origin'), ALLOWED_ORIGIN);
     assert.notEqual(
       res.headers.get('access-control-allow-origin'),
@@ -189,7 +203,11 @@ describe('HTTP error paths (§18.2 #39 #40 #41)', () => {
 
   it('body over 64 KiB returns 413', async () => {
     const big = 'x'.repeat(70 * 1024);
-    const { status, data } = await jsonRequest('POST', '/propose', `{"pad":"${big}"}`);
+    const { status, data } = await jsonRequest(
+      'POST',
+      '/propose',
+      `{"pad":"${big}"}`,
+    );
     assert.equal(status, 413);
     assert.equal(data.error, 'payload_too_large');
   });
@@ -293,22 +311,35 @@ describe('HTTP full allow commit+verify path', () => {
 });
 
 describe('HTTP bind address (§18.2 #42)', () => {
-  it('default bind host is 127.0.0.1 (loopback, not a sandbox claim)', () => {
-    // The suite started the gateway with DEMO_GATEWAY_HOST=127.0.0.1
-    // (the server default). Reachability via baseUrl proves the bind.
-    assert.equal(listenHost, '127.0.0.1');
+  it('default bind host is 127.0.0.1 when DEMO_GATEWAY_HOST is unset', () => {
+    // Suite before() started with DEMO_GATEWAY_HOST deleted from child env.
+    // Server default must therefore be exercised.
+    assert.ok(
+      defaultStdout.includes(`listening on http://${SERVER_DEFAULT_HOST}:`),
+      `expected default bind log for ${SERVER_DEFAULT_HOST}, got: ${defaultStdout}`,
+    );
     assert.ok(listenPort > 0);
-    assert.ok(baseUrl.startsWith('http://127.0.0.1:'));
+    assert.ok(baseUrl.startsWith(`http://${SERVER_DEFAULT_HOST}:`));
     // Non-claim: loopback bind is NOT sandbox, isolation, or authentication.
   });
 
-  it('HOST is controlled only via DEMO_GATEWAY_HOST env', async () => {
-    // Spawn a second short-lived instance with explicit override.
-    // Only 127.0.0.1 is used here (safe in test env); the point is that
-    // the env var is honored, not that arbitrary hosts are recommended.
-    const second = await startGateway({ DEMO_GATEWAY_HOST: '127.0.0.1' });
+  it('DEMO_GATEWAY_HOST override binds to a distinct host value', async () => {
+    // Use 'localhost' — distinct string from default '127.0.0.1'.
+    // Still loopback-safe; does not claim isolation.
+    const overrideHost = 'localhost';
+    assert.notEqual(overrideHost, SERVER_DEFAULT_HOST);
+
+    const second = await startGateway({ DEMO_GATEWAY_HOST: overrideHost });
     try {
-      assert.equal(second.host, '127.0.0.1');
+      assert.equal(second.host, overrideHost);
+      assert.ok(
+        second.stdout.includes(`listening on http://${overrideHost}:`),
+        `expected override bind log for ${overrideHost}, got: ${second.stdout}`,
+      );
+      assert.ok(
+        !second.stdout.includes(`listening on http://${SERVER_DEFAULT_HOST}:`),
+        'override stdout must not claim the default host bind',
+      );
       const res = await fetch(`${second.url}/health`);
       assert.equal(res.status, 200);
     } finally {
