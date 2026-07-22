@@ -43,6 +43,15 @@ class T(unittest.TestCase):
         r=self.invoke(EVENT_NAME='push',REF_NAME='refs/heads/main',DELETED='false',BEFORE_SHA='1'*40,AFTER_SHA=after); self.assertEqual(r.returncode,1); self.assertIn('unavailable after targeted fetch',r.stderr); self.assertNotIn('fatal: bad object',r.stderr)
     def test_ref_deletion_skips_source_diff(self):
         r=self.invoke(EVENT_NAME='push',REF_NAME='refs/heads/main',DELETED='true',BEFORE_SHA='bad',AFTER_SHA='bad'); self.assertEqual(r.returncode,0,r.stderr); self.assertIn('no source diff executed',r.stdout)
+    def test_clean_manual_main_dispatch_root_commit(self):
+        a=self.repo.commit('clean\n','a'); r=self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a); self.assertEqual(r.returncode,0,r.stderr)
+    def test_manual_main_dispatch_checks_parent_diff(self):
+        self.repo.commit('clean\n','b'); a=self.repo.commit('bad \n','a'); self.assertNotEqual(self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a).returncode,0)
+    def test_manual_main_dispatch_checks_merge_first_parent_diff(self):
+        self.repo.commit('base\n','base'); git(self.repo.path,'checkout','-b','feature'); self.repo.commit('bad \n','feature'); git(self.repo.path,'checkout','main'); git(self.repo.path,'merge','--no-ff','-m','merge','feature'); a=git(self.repo.path,'rev-parse','HEAD')
+        self.assertNotEqual(self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a).returncode,0)
+    def test_manual_dispatch_rejects_non_main_ref(self):
+        a=self.repo.commit('clean\n','a'); r=self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/feature',AFTER_SHA=a); self.assertEqual(r.returncode,1); self.assertIn('must target refs/heads/main',r.stderr)
     def test_invalid_event_variables_fail_clearly(self):
         r=self.invoke(EVENT_NAME='',BASE_SHA='',HEAD_SHA=''); self.assertEqual(r.returncode,1); self.assertIn('EVENT_NAME must be',r.stderr)
         r=self.invoke(EVENT_NAME='push',REF_NAME='refs/heads/main',DELETED='maybe',BEFORE_SHA=ZERO_SHA,AFTER_SHA='2'*40); self.assertEqual(r.returncode,1); self.assertIn('DELETED must be',r.stderr)
@@ -50,6 +59,6 @@ class T(unittest.TestCase):
         r=self.invoke(EVENT_NAME='push',REF_NAME='refs/heads/feature',DELETED='false',BEFORE_SHA='bad',AFTER_SHA='bad'); self.assertEqual(r.returncode,0,r.stderr)
     def test_tag_push_is_out_of_scope(self):
         r=self.invoke(EVENT_NAME='push',REF_NAME='refs/tags/v1',DELETED='false',BEFORE_SHA='bad',AFTER_SHA='bad'); self.assertEqual(r.returncode,0,r.stderr)
-    def test_workflow_limits_pushes_to_main(self):
-        t=WORKFLOW.read_text(); self.assertIn('push:\n    branches:\n      - main',t); self.assertNotIn('tags:',t); self.assertIn('AFTER_SHA: ${{ github.event.after }}',t); self.assertIn('DELETED: ${{ github.event.deleted }}',t)
+    def test_workflow_limits_pushes_to_main_and_supports_manual_main_audit(self):
+        t=WORKFLOW.read_text(); self.assertIn('push:\n    branches:\n      - main',t); self.assertNotIn('tags:',t); self.assertIn('workflow_dispatch:',t); self.assertIn('AFTER_SHA: ${{ github.event.after || github.sha }}',t); self.assertIn('DELETED: ${{ github.event.deleted }}',t)
 if __name__=='__main__': unittest.main()
