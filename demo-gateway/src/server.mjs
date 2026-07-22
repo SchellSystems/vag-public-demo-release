@@ -4,13 +4,17 @@
  * Minimal HTTP server wrapping the core gateway logic.
  * No external dependencies. No cloud. No shell. No HTTP client imports.
  * CORS restricted to demo-ui origin only.
+ *
+ * Default bind: 127.0.0.1 (loopback). This is NOT a sandbox, isolation,
+ * or authentication boundary.
  */
 
 import { createServer } from 'node:http';
 import { health, propose, commit, verify } from './core.mjs';
 
+const HOST = process.env.DEMO_GATEWAY_HOST || '127.0.0.1';
 const PORT = parseInt(process.env.DEMO_GATEWAY_PORT || '4400', 10);
-const ALLOWED_ORIGIN = process.env.DEMO_UI_ORIGIN || 'http://localhost:5173';
+const ALLOWED_ORIGIN = process.env.DEMO_UI_ORIGIN || 'http://127.0.0.1:5173';
 const MAX_BODY_BYTES = 65536; // 64 KB
 
 function corsHeaders() {
@@ -126,8 +130,8 @@ async function handleRequest(req, res) {
 
 const server = createServer(handleRequest);
 
-server.listen(PORT, () => {
-  console.log(`[demo-gateway] listening on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`[demo-gateway] listening on http://${HOST}:${PORT}`);
   console.log(`[demo-gateway] CORS origin: ${ALLOWED_ORIGIN}`);
   console.log(`[demo-gateway] mode: local-bounded-demo`);
 });
