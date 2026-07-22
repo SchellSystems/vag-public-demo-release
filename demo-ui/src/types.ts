@@ -1,5 +1,6 @@
-/** Evidence structure from a bounded demo run */
+/** Evidence structure from a bounded demo run — whitepaper §15.1 */
 export interface DemoEvidence {
+  schema_version: 'vag-demo-evidence/1.0';
   health: HealthResult | null;
   allow_run: ProposeResult | null;
   commit: CommitResult | null;
@@ -7,18 +8,22 @@ export interface DemoEvidence {
   deny_run: ProposeResult | null;
   bounded_demo_artifacts: BoundedDemoArtifacts | null;
   negative_evidence: NegativeEvidence | null;
-  path_result: 'full_demo_passed' | 'deny_path_passed' | 'incomplete' | 'failed';
+  path_result: 'full_demo_passed' | 'deny_path_passed' | 'incomplete';
   full_demo_passed: boolean;
   deny_path_passed: boolean;
   demo_passed: boolean;
-  truth_surface: string;
+  truth_surface: 'bounded local demo gateway path';
   truth_boundaries: string[];
   non_claims: string[];
-  source: string;
-  truth_status: string;
-  negative_evidence_scope: string;
-  negative_evidence_source: string;
-  deny_non_claim: string;
+  source: 'vag-public-demo local gateway run';
+  truth_status:
+    | 'bounded_demo_complete'
+    | 'bounded_deny_path_complete'
+    | 'incomplete';
+  evidence_assembly_order: 'commit_verify_then_evidence';
+  negative_evidence_scope: 'bounded_ui_path_only';
+  negative_evidence_source: 'ui_derived_from_gateway_deny';
+  deny_non_claim: 'does_not_prove_system_wide_non_execution';
 }
 
 export interface HealthResult {
@@ -69,21 +74,28 @@ export interface VerifyResult {
   verified_at: string;
 }
 
+/** Artifact schema — whitepaper §15.2 */
 export interface BoundedDemoArtifacts {
-  controlled_tool_path: string;
+  artifact_kind: 'synthetic_local_json';
+  controlled_demo_path: 'demo.transform_json';
   output_digest: string;
   proposal_id: string;
-  committed: boolean;
-  verified: boolean;
+  committed: true;
+  verified: true;
+  gateway_observed_artifact_content: false;
 }
 
+/** Negative evidence — whitepaper §15.3; no_tool_grant is forbidden */
 export interface NegativeEvidence {
-  denied: boolean;
+  denied: true;
   proposal_id: string;
-  no_tool_grant: boolean;
-  no_commit: boolean;
-  no_verify: boolean;
+  no_local_artifact: true;
+  no_commit: true;
+  no_verify: true;
+  scope: 'bounded_ui_path_only';
+  source: 'ui_derived_from_gateway_deny';
   reason: string;
+  non_claim: 'does_not_prove_system_wide_non_execution';
 }
 
 export interface GatewayError {
