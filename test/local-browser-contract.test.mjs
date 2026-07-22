@@ -28,6 +28,14 @@ function read(relPath) {
   return readFileSync(join(ROOT, relPath), 'utf8');
 }
 
+function readConfigBlock(source, blockName) {
+  const match = source.match(
+    new RegExp(`\\b${blockName}:\\s*\\{([\\s\\S]*?)\\n\\s*\\},`),
+  );
+  assert.ok(match, `vite config must define a ${blockName} block`);
+  return match[1];
+}
+
 const EXPECTED_GATEWAY_ORIGIN = 'http://127.0.0.1:5173';
 const EXPECTED_UI_GATEWAY_URL = 'http://127.0.0.1:4400';
 const EXPECTED_EVIDENCE_SCOPE = 'bounded_ui_path_only';
@@ -36,22 +44,25 @@ describe('origin contract — gateway server defaults', () => {
   const server = read('demo-gateway/src/server.mjs');
 
   it('ALLOWED_ORIGIN defaults to http://127.0.0.1:5173', () => {
-    assert.ok(
-      server.includes("|| 'http://127.0.0.1:5173'"),
+    assert.match(
+      server,
+      /const ALLOWED_ORIGIN = process\.env\.DEMO_UI_ORIGIN \|\| 'http:\/\/127\.0\.0\.1:5173';/,
       'gateway ALLOWED_ORIGIN default must be http://127.0.0.1:5173',
     );
   });
 
   it('HOST defaults to 127.0.0.1', () => {
-    assert.ok(
-      server.includes("|| '127.0.0.1'"),
+    assert.match(
+      server,
+      /const HOST = process\.env\.DEMO_GATEWAY_HOST \|\| '127\.0\.0\.1';/,
       'gateway HOST default must be 127.0.0.1',
     );
   });
 
   it('PORT defaults to 4400', () => {
-    assert.ok(
-      server.includes("|| '4400'"),
+    assert.match(
+      server,
+      /const PORT = parseInt\(process\.env\.DEMO_GATEWAY_PORT \|\| '4400', 10\);/,
       'gateway PORT default must be 4400',
     );
   });
@@ -61,9 +72,10 @@ describe('origin contract — UI constants', () => {
   const constants = read('demo-ui/src/constants.ts');
 
   it('GATEWAY_URL is http://127.0.0.1:4400', () => {
-    assert.ok(
-      constants.includes(EXPECTED_UI_GATEWAY_URL),
-      `UI GATEWAY_URL must contain ${EXPECTED_UI_GATEWAY_URL}`,
+    assert.match(
+      constants,
+      /export const GATEWAY_URL = 'http:\/\/127\.0\.0\.1:4400';/,
+      `UI GATEWAY_URL must be ${EXPECTED_UI_GATEWAY_URL}`,
     );
   });
 });
@@ -71,18 +83,16 @@ describe('origin contract — UI constants', () => {
 describe('origin contract — Vite configuration', () => {
   const viteConfig = read('demo-ui/vite.config.ts');
 
-  it('server.host is explicitly 127.0.0.1', () => {
-    assert.ok(
-      viteConfig.includes("host: '127.0.0.1'"),
-      'vite server.host must be explicitly set to 127.0.0.1',
-    );
+  it('server binds explicitly to 127.0.0.1:5173', () => {
+    const serverBlock = readConfigBlock(viteConfig, 'server');
+    assert.match(serverBlock, /host:\s*'127\.0\.0\.1'/);
+    assert.match(serverBlock, /port:\s*5173/);
   });
 
-  it('server.port is 5173', () => {
-    assert.ok(
-      viteConfig.includes('port: 5173'),
-      'vite server.port must be 5173',
-    );
+  it('preview binds explicitly to 127.0.0.1:5173', () => {
+    const previewBlock = readConfigBlock(viteConfig, 'preview');
+    assert.match(previewBlock, /host:\s*'127\.0\.0\.1'/);
+    assert.match(previewBlock, /port:\s*5173/);
   });
 });
 
@@ -128,8 +138,9 @@ describe('origin contract — negative_evidence_scope', () => {
 
   it('evidence service uses bounded_ui_path_only', () => {
     const evidenceService = read('demo-ui/src/services/evidence.ts');
-    assert.ok(
-      evidenceService.includes(EXPECTED_EVIDENCE_SCOPE),
+    assert.match(
+      evidenceService,
+      /negative_evidence_scope:\s*'bounded_ui_path_only'/,
       `evidence service must use ${EXPECTED_EVIDENCE_SCOPE}`,
     );
   });
