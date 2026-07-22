@@ -6,7 +6,7 @@ This walkthrough demonstrates the bounded demo path through the local VAG demo g
 
 ## Prerequisites
 
-- Node.js `>=20.19.0`; the public demo audit workflow uses Node.js 22
+- Node.js `>=20.19.0`; the public demo audit workflow validates Node.js 20.19 and 22
 - npm
 - Terminal access
 
@@ -30,7 +30,7 @@ In the first terminal:
 npm run gateway
 ```
 
-Gateway runs on `http://localhost:4400`.
+Gateway runs on `http://127.0.0.1:4400`.
 
 ### 3. Start the Demo UI
 
@@ -40,11 +40,11 @@ In the second terminal:
 npm run dev
 ```
 
-UI runs on `http://localhost:5173`.
+UI runs on `http://127.0.0.1:5173`.
 
 ### 4. Open the Demo UI
 
-Navigate to `http://localhost:5173` in your browser.
+Navigate to `http://127.0.0.1:5173` in your browser.
 
 You will see:
 
@@ -65,6 +65,7 @@ Click **"Allow Demo"** or **"Run Gateway-Bound Demo"**:
 6. Commit binds proposal, decision, and the caller-supplied digest
 7. Verify checks stored hash, signature, and reference relationships
 8. Deny path demonstrates UI-derived negative evidence (bounded public-demo path only)
+9. Evidence is assembled after Commit and Verify
 
 ### 6. Run Deny Path
 
@@ -88,7 +89,8 @@ The Evidence JSON block shows UI-assembled bounded demo review material includin
 - `demo_passed` (true only with full allow+commit+verify+deny chain and all invariants met)
 - `truth_surface`, `truth_boundaries`, `non_claims`
 - `source`, `truth_status`
-- `negative_evidence_scope`: bounded_demo_path_only
+- `evidence_assembly_order`: commit_verify_then_evidence
+- `negative_evidence_scope`: bounded_ui_path_only
 - `negative_evidence_source`: ui_derived_from_gateway_deny
 - `deny_non_claim`: does_not_prove_system_wide_non_execution
 
