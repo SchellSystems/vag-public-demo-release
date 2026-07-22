@@ -40,7 +40,7 @@ All other intents are denied by default.
 
 ## CORS
 
-The gateway returns `Access-Control-Allow-Origin` for the configured demo-UI origin, which defaults to `http://localhost:5173`. No credentials are enabled.
+The gateway returns `Access-Control-Allow-Origin` for the configured demo-UI origin, which defaults to `http://127.0.0.1:5173`. No credentials are enabled.
 
 CORS is a browser response rule. It is not authentication, request blocking, network isolation, or proof of loopback-only binding.
 
@@ -59,4 +59,4 @@ cd demo-gateway
 node src/server.mjs
 ```
 
-The default demo client addresses the gateway as `http://localhost:4400`. This client address is not a claim that the server enforces loopback-only binding.
+The default demo client addresses the gateway as `http://127.0.0.1:4400`. This client address is not a claim that the server enforces loopback-only binding.

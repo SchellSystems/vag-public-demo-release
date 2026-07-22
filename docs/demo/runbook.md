@@ -89,7 +89,7 @@ repository.
 |---------|----------|
 | Gateway won't start | Check port 4400 is free |
 | UI can't reach gateway | Ensure gateway is running, check CORS |
-| Probe fails | Ensure gateway is running on localhost:4400 |
+| Probe fails | Ensure gateway is running on 127.0.0.1:4400 |
 | Claim audit fails | Check for overclaiming phrases in changed files |
 | Export audit fails | Check for paths, workspace refs, or pattern matches |
 
