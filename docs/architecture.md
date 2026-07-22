@@ -7,7 +7,7 @@ This document describes the public, bounded demo architecture of VAG.
 ## Flow
 
 ```
-Proposal → Gateway Decision → UI-Created Demo Artifact → Caller-Supplied Digest → Commit → Evidence → Verify
+Proposal → Gateway Decision → UI-Created Demo Artifact → Caller-Supplied Digest → Commit → Verify → Evidence Assembly
 ```
 
 ## Components
@@ -28,13 +28,13 @@ After allow, the UI creates a local demo artifact and computes its digest. The g
 
 Commit binds the proposal, decision, and caller-supplied digest in the bounded public-demo record.
 
-### Evidence
-
-Evidence reconstructs the bounded public-demo record path. UI-assembled evidence may reference the local artifact and the committed digest, but it is not gateway observation of external execution.
-
 ### Verify
 
 Verify reports whether the stored hash, signature, and proposal/decision reference relationships pass their defined checks within the bounded demo scope.
+
+### Evidence
+
+Evidence Assembly reconstructs the bounded public-demo record path after Commit and Verify. UI-assembled evidence may reference the local artifact and the committed digest, but it is not gateway observation of external execution.
 
 ### Deny
 
@@ -45,8 +45,8 @@ For a denied proposal, the gateway rejects commit. In the bounded UI flow, no lo
 - Gateway decides within a bounded public-demo contract.
 - The UI creates the local demo artifact after allow.
 - Commit binds proposal, decision, and caller-supplied digest.
-- Evidence reconstructs bounded public-demo record paths.
 - Verify checks stored integrity and reference relationships within scope.
+- Evidence Assembly reconstructs bounded public-demo record paths after Commit and Verify.
 - Public-demo artifacts are not Core or Pilot artifacts.
 - This repository contains no canonical VAG Core implementation.
 - This repository contains a minimal local demo gateway that simulates the bounded public demo contract.
