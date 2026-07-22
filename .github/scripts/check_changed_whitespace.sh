@@ -42,5 +42,15 @@ case "$EVENT_NAME" in
       git diff --check "${BEFORE_SHA}..${AFTER_SHA}"
     fi
     ;;
-  *) fail "EVENT_NAME must be pull_request or push" ;;
+  workflow_dispatch)
+    [[ "$REF_NAME" == "refs/heads/main" ]] || fail "workflow_dispatch must target refs/heads/main"
+    ensure_commit "AFTER_SHA" "$AFTER_SHA"
+    if parent_sha="$(git rev-parse "${AFTER_SHA}^1" 2>/dev/null)" && is_sha "$parent_sha"; then
+      ensure_commit "PARENT_SHA" "$parent_sha"
+      git diff --check "${parent_sha}..${AFTER_SHA}"
+    else
+      git show --check --format= "$AFTER_SHA"
+    fi
+    ;;
+  *) fail "EVENT_NAME must be pull_request, push, or workflow_dispatch" ;;
 esac
