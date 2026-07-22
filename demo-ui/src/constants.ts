@@ -1,5 +1,5 @@
 /** Gateway URL for local demo */
-export const GATEWAY_URL = 'http://localhost:4400';
+export const GATEWAY_URL = 'http://127.0.0.1:4400';
 
 /** Demo mode label */
 export const DEMO_MODE = 'Local Demo / Gateway-Bound Demo';
