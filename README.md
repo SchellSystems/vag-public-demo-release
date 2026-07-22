@@ -127,3 +127,7 @@ This repository is a public bounded local demo. It illustrates a reviewable prop
 ## License
 
 This project is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome under the Apache License, Version 2.0. See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
