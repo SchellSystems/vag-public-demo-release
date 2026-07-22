@@ -5,6 +5,9 @@ const HEX64_RE = /^[0-9a-f]{64}$/;
 
 /**
  * Build a complete demo evidence object from the collected run data.
+ * Assembly order is always Commit → Verify → Evidence (whitepaper §15).
+ * Negative evidence is UI-derived and bounded to the observed UI path only.
+ * No ToolGrant subsystem exists; no ToolGrant field is emitted or checked.
  */
 export function buildEvidence(params: {
   health: DemoEvidence['health'];
@@ -44,7 +47,7 @@ export function buildEvidence(params: {
     denyRun.allowed === false &&
     negativeEvidence !== null &&
     negativeEvidence.denied === true &&
-    negativeEvidence.no_tool_grant === true &&
+    negativeEvidence.no_local_artifact === true &&
     negativeEvidence.no_commit === true &&
     negativeEvidence.no_verify === true;
 
@@ -60,7 +63,7 @@ export function buildEvidence(params: {
     denyRun.allowed === false &&
     negativeEvidence !== null &&
     negativeEvidence.denied === true &&
-    negativeEvidence.no_tool_grant === true &&
+    negativeEvidence.no_local_artifact === true &&
     negativeEvidence.no_commit === true &&
     negativeEvidence.no_verify === true;
 
@@ -71,6 +74,7 @@ export function buildEvidence(params: {
       : 'incomplete';
 
   return {
+    schema_version: 'vag-demo-evidence/1.0',
     health,
     allow_run: allowRun,
     commit,
@@ -87,14 +91,23 @@ export function buildEvidence(params: {
       'local gateway only',
       'deny-by-default',
       'scope.intent authorization',
-      'no external calls',
-      'no cloud',
-      'no shell',
+      'caller-supplied artifact digest',
+      'no external calls in current gateway implementation',
+      'no cloud SDK path',
+      'no shell path',
+      'no persistent evidence store',
+      'no authentication',
+      'no system-wide observation',
     ],
     non_claims: NON_CLAIMS,
     source: 'vag-public-demo local gateway run',
-    truth_status: fullDemoPassed ? 'bounded_demo_complete' : denyPathPassed ? 'bounded_deny_path_complete' : 'incomplete',
-    negative_evidence_scope: 'bounded_demo_path_only',
+    truth_status: fullDemoPassed
+      ? 'bounded_demo_complete'
+      : denyPathPassed
+        ? 'bounded_deny_path_complete'
+        : 'incomplete',
+    evidence_assembly_order: 'commit_verify_then_evidence',
+    negative_evidence_scope: 'bounded_ui_path_only',
     negative_evidence_source: 'ui_derived_from_gateway_deny',
     deny_non_claim: 'does_not_prove_system_wide_non_execution',
   };

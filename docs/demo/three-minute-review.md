@@ -9,7 +9,7 @@ The demo is intentionally bounded. It should be read as a local, inspectable rec
 Read the repository as a narrow public demo:
 
 ```text
-Proposal -> Gateway Decision -> UI-created Artifact -> Digest -> Commit -> Evidence -> Verify
+Proposal -> Gateway Decision -> UI-created Artifact -> Digest -> Commit -> Verify -> Evidence Assembly
 ```
 
 The important distinction is not that an action exists. The important distinction is whether the bounded demo path can produce the expected follow-on artifacts after a gateway decision.
@@ -48,10 +48,10 @@ In the allow path, look for these artifacts:
 - UI-created local demo artifact
 - caller-supplied `output_digest`
 - commit record
-- evidence record
 - verify result
+- assembled evidence (after Commit and Verify)
 
-The commit should bind the proposal, decision, and caller-supplied digest. Verify should check the stored hash, signature, and reference relationships. The gateway does not observe external execution or receive the artifact itself.
+The commit should bind the proposal, decision, and caller-supplied digest. Verify should check the stored hash, signature, and reference relationships. Evidence is assembled after Commit and Verify for review of the bounded path. The gateway does not observe external execution or receive the artifact itself.
 
 ## 5. Inspect the Deny Path
 
@@ -68,7 +68,7 @@ This is a UI-derived statement about the bounded public-demo path. The repositor
 A correct review result is:
 
 ```text
-The repository demonstrates a bounded local proposal-decision-artifact-digest-commit-evidence-verify path.
+The repository demonstrates a bounded local proposal-decision-artifact-digest-commit-verify-evidence-assembly path.
 ```
 
 Do not restate the result as a claim about live external workflows, global execution control, certification, or a larger deployed environment.

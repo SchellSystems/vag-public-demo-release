@@ -2,7 +2,7 @@
 
 [![Public Demo Audit](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml/badge.svg)](https://github.com/SchellSystems/vag-public-demo-release/actions/workflows/audit.yml)
 
-VAG Public Demo is a bounded local demonstration of an inspectable proposal, decision, artifact-digest, commit, evidence, and verify path.
+VAG Public Demo is a bounded local demonstration of an inspectable proposal, decision, artifact-digest, commit, verify, and evidence-assembly path.
 
 The repository is intentionally small. It shows one reviewable path clearly instead of presenting a larger system than the public demo contains.
 
@@ -22,13 +22,14 @@ Start here if you are evaluating the repository for the first time:
 - Commit binds the proposal, decision, and caller-supplied `output_digest`.
 - A denied proposal cannot be committed; the UI records the absence of its bounded follow-on artifact chain.
 - Verify checks stored hash, signature, and reference relationships for the bounded demo record.
+- Evidence is assembled after Commit and Verify for review of the bounded path.
 
 ## Demo Flow
 
 ```text
 Agent Proposal
   -> Gateway Decision
-      -> allow -> UI-created demo artifact -> caller-supplied digest -> Commit -> Evidence -> Verify
+      -> allow -> UI-created demo artifact -> caller-supplied digest -> Commit -> Verify -> Evidence Assembly
       -> deny  -> Commit rejected / UI records no bounded follow-on chain
 ```
 
@@ -75,8 +76,8 @@ Gateway decides within a bounded public-demo contract.
 After allow, the UI creates a local demo artifact and computes its digest.
 The gateway receives the caller-supplied `output_digest`; it does not observe external execution.
 Commit binds proposal, decision, and digest.
-Evidence reconstructs the bounded public-demo record path.
 Verify checks stored hash, signature, and reference relationships.
+Evidence Assembly reconstructs the bounded public-demo record path after Commit and Verify.
 For deny, the commit endpoint rejects the proposal and the UI derives the absence of its bounded follow-on chain.
 This repository contains no ToolGrant subsystem.
 ```
@@ -121,7 +122,7 @@ Also:
 
 ## Repository Status
 
-This repository is a public bounded local demo. It illustrates a reviewable proposal-decision-artifact-digest-commit-evidence-verify path and remains limited to the repository scope described in the documentation. No real external workflow integration, global execution control, or certification is implied.
+This repository is a public bounded local demo. It illustrates a reviewable proposal-decision-artifact-digest-commit-verify-evidence-assembly path and remains limited to the repository scope described in the documentation. No real external workflow integration, global execution control, or certification is implied.
 
 ## License
 

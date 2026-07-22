@@ -4,13 +4,17 @@
  * Minimal HTTP server wrapping the core gateway logic.
  * No external dependencies. No cloud. No shell. No HTTP client imports.
  * CORS restricted to demo-ui origin only.
+ *
+ * Default bind: 127.0.0.1 (loopback). This is NOT a sandbox, isolation,
+ * or authentication boundary.
  */
 
 import { createServer } from 'node:http';
 import { health, propose, commit, verify } from './core.mjs';
 
+const HOST = process.env.DEMO_GATEWAY_HOST || '127.0.0.1';
 const PORT = parseInt(process.env.DEMO_GATEWAY_PORT || '4400', 10);
-const ALLOWED_ORIGIN = process.env.DEMO_UI_ORIGIN || 'http://localhost:5173';
+const ALLOWED_ORIGIN = process.env.DEMO_UI_ORIGIN || 'http://127.0.0.1:5173';
 const MAX_BODY_BYTES = 65536; // 64 KB
 
 function corsHeaders() {
@@ -35,16 +39,30 @@ function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalLength = 0;
+    let tooLarge = false;
+    let settled = false;
+
     req.on('data', (chunk) => {
+      if (tooLarge) {
+        // Drain remaining data without storing; do not destroy the socket
+        // so the caller can still send a normative 413 response.
+        return;
+      }
       totalLength += chunk.length;
       if (totalLength > MAX_BODY_BYTES) {
-        reject(new Error('payload_too_large'));
-        req.destroy();
+        tooLarge = true;
+        chunks.length = 0; // free already buffered data
+        if (!settled) {
+          settled = true;
+          reject(new Error('payload_too_large'));
+        }
         return;
       }
       chunks.push(chunk);
     });
     req.on('end', () => {
+      if (tooLarge || settled) return;
+      settled = true;
       try {
         const raw = Buffer.concat(chunks).toString('utf8');
         resolve(raw ? JSON.parse(raw) : {});
@@ -52,7 +70,12 @@ function readBody(req) {
         reject(new Error('Invalid JSON'));
       }
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
+    });
   });
 }
 
@@ -126,8 +149,8 @@ async function handleRequest(req, res) {
 
 const server = createServer(handleRequest);
 
-server.listen(PORT, () => {
-  console.log(`[demo-gateway] listening on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`[demo-gateway] listening on http://${HOST}:${PORT}`);
   console.log(`[demo-gateway] CORS origin: ${ALLOWED_ORIGIN}`);
   console.log(`[demo-gateway] mode: local-bounded-demo`);
 });
