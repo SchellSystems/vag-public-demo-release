@@ -47,6 +47,9 @@ class T(unittest.TestCase):
         a=self.repo.commit('clean\n','a'); r=self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a); self.assertEqual(r.returncode,0,r.stderr)
     def test_manual_main_dispatch_checks_parent_diff(self):
         self.repo.commit('clean\n','b'); a=self.repo.commit('bad \n','a'); self.assertNotEqual(self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a).returncode,0)
+    def test_manual_main_dispatch_checks_merge_first_parent_diff(self):
+        self.repo.commit('base\n','base'); git(self.repo.path,'checkout','-b','feature'); self.repo.commit('bad \n','feature'); git(self.repo.path,'checkout','main'); git(self.repo.path,'merge','--no-ff','-m','merge','feature'); a=git(self.repo.path,'rev-parse','HEAD')
+        self.assertNotEqual(self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/main',AFTER_SHA=a).returncode,0)
     def test_manual_dispatch_rejects_non_main_ref(self):
         a=self.repo.commit('clean\n','a'); r=self.invoke(EVENT_NAME='workflow_dispatch',REF_NAME='refs/heads/feature',AFTER_SHA=a); self.assertEqual(r.returncode,1); self.assertIn('must target refs/heads/main',r.stderr)
     def test_invalid_event_variables_fail_clearly(self):
