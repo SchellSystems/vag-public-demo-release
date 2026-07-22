@@ -1,143 +1,41 @@
 /**
  * Evidence contract tests — whitepaper §15 / §18.3
  *
- * Pure predicate checks against the normative DemoEvidence schema.
- * Mirrors buildEvidence semantics without importing TypeScript sources.
- * No ToolGrant field is permitted or asserted.
+ * Loads the REAL production function:
+ *   demo-ui/src/services/evidence.ts → buildEvidence
+ *
+ * Uses Node type-stripping + a test-only resolve hook so extensionless
+ * TypeScript relative imports resolve under plain Node ESM.
+ * No duplicated production predicates. No no_tool_grant field.
+ *
+ * Requires Node with type-stripping (Node >= 22.6; CI reference: Node 22).
  */
 
+import { register } from 'node:module';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+const here = dirname(fileURLToPath(import.meta.url));
+
+// Register test-only .ts extension resolver before loading production TS.
+await register(
+  pathToFileURL(join(here, 'ts-resolve.mjs')).href,
+  pathToFileURL(here + '/').href,
+);
+
+// Production module under test.
+const { buildEvidence } = await import(
+  pathToFileURL(join(here, '..', 'demo-ui', 'src', 'services', 'evidence.ts')).href
+);
+
+// Prove we loaded the real module path, not a local copy.
+assert.equal(typeof buildEvidence, 'function');
+assert.equal(buildEvidence.name, 'buildEvidence');
+
 const HEX64 = 'a'.repeat(64);
 const HEX64_B = 'b'.repeat(64);
-
-const NON_CLAIMS = [
-  'not production-ready',
-  'not a sandbox',
-  'not OS/browser/network/process/filesystem isolation',
-  'not system-wide enforcement',
-  'not compliance proof',
-  'not security proof',
-  'not full telemetry',
-  'Verify does not approve',
-  'Verify does not authorize',
-  'Evidence does not certify compliance',
-  'Deny does not prove system-wide non-execution',
-  'Gateway does not grant global tool capability',
-  'no external platform integration',
-];
-
-/**
- * Contract evaluator — mirrors demo-ui/src/services/evidence.ts predicates
- * and whitepaper §15.1–§15.5. Kept local so tests stay pure .mjs.
- */
-function evaluateEvidence(params) {
-  const {
-    health,
-    allowRun,
-    commit,
-    verify,
-    denyRun,
-    artifacts,
-    negativeEvidence,
-  } = params;
-
-  const HEX64_RE = /^[0-9a-f]{64}$/;
-
-  const fullDemoPassed =
-    health !== null &&
-    health.status === 'ok' &&
-    allowRun !== null &&
-    allowRun.decision === 'allow' &&
-    allowRun.allowed === true &&
-    typeof allowRun.decision_id === 'string' &&
-    allowRun.decision_id.length > 0 &&
-    commit !== null &&
-    commit.status === 'committed' &&
-    artifacts !== null &&
-    commit.output_digest === artifacts.output_digest &&
-    HEX64_RE.test(commit.record_hash) &&
-    HEX64_RE.test(commit.signature) &&
-    verify !== null &&
-    verify.status === 'verified' &&
-    verify.valid === true &&
-    verify.integrity === true &&
-    verify.hash_integrity === true &&
-    verify.signature_integrity === true &&
-    verify.reference_integrity === true &&
-    verify.record_hash === commit.record_hash &&
-    verify.decision_id === allowRun.decision_id &&
-    denyRun !== null &&
-    denyRun.decision === 'deny' &&
-    denyRun.allowed === false &&
-    negativeEvidence !== null &&
-    negativeEvidence.denied === true &&
-    negativeEvidence.no_local_artifact === true &&
-    negativeEvidence.no_commit === true &&
-    negativeEvidence.no_verify === true;
-
-  const denyPathPassed =
-    health !== null &&
-    health.status === 'ok' &&
-    allowRun === null &&
-    commit === null &&
-    verify === null &&
-    artifacts === null &&
-    denyRun !== null &&
-    denyRun.decision === 'deny' &&
-    denyRun.allowed === false &&
-    negativeEvidence !== null &&
-    negativeEvidence.denied === true &&
-    negativeEvidence.no_local_artifact === true &&
-    negativeEvidence.no_commit === true &&
-    negativeEvidence.no_verify === true;
-
-  const pathResult = fullDemoPassed
-    ? 'full_demo_passed'
-    : denyPathPassed
-      ? 'deny_path_passed'
-      : 'incomplete';
-
-  return {
-    schema_version: 'vag-demo-evidence/1.0',
-    health,
-    allow_run: allowRun,
-    commit,
-    verify,
-    deny_run: denyRun,
-    bounded_demo_artifacts: artifacts,
-    negative_evidence: negativeEvidence,
-    path_result: pathResult,
-    full_demo_passed: fullDemoPassed,
-    deny_path_passed: denyPathPassed,
-    demo_passed: fullDemoPassed,
-    truth_surface: 'bounded local demo gateway path',
-    truth_boundaries: [
-      'local gateway only',
-      'deny-by-default',
-      'scope.intent authorization',
-      'caller-supplied artifact digest',
-      'no external calls in current gateway implementation',
-      'no cloud SDK path',
-      'no shell path',
-      'no persistent evidence store',
-      'no authentication',
-      'no system-wide observation',
-    ],
-    non_claims: NON_CLAIMS,
-    source: 'vag-public-demo local gateway run',
-    truth_status: fullDemoPassed
-      ? 'bounded_demo_complete'
-      : denyPathPassed
-        ? 'bounded_deny_path_complete'
-        : 'incomplete',
-    evidence_assembly_order: 'commit_verify_then_evidence',
-    negative_evidence_scope: 'bounded_ui_path_only',
-    negative_evidence_source: 'ui_derived_from_gateway_deny',
-    deny_non_claim: 'does_not_prove_system_wide_non_execution',
-  };
-}
 
 function validNegativeEvidence(proposalId = 'deny-prop-1') {
   return {
@@ -237,9 +135,16 @@ function validArtifacts() {
   };
 }
 
+describe('evidence contract — production module binding', () => {
+  it('buildEvidence is the exported production function', () => {
+    assert.equal(typeof buildEvidence, 'function');
+    assert.equal(buildEvidence.name, 'buildEvidence');
+  });
+});
+
 describe('evidence contract — full allow path (§18.3 #44)', () => {
   it('sets full_demo_passed, demo_passed, and assembly order', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -265,7 +170,7 @@ describe('evidence contract — full allow path (§18.3 #44)', () => {
   });
 
   it('contains no no_tool_grant key anywhere in the evidence object', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -283,7 +188,7 @@ describe('evidence contract — full allow path (§18.3 #44)', () => {
 
 describe('evidence contract — deny-only path (§18.3 #45)', () => {
   it('sets deny_path_passed and bounded negative evidence fields', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: null,
       commit: null,
@@ -314,7 +219,7 @@ describe('evidence contract — negative evidence completeness', () => {
   for (const field of ['no_local_artifact', 'no_commit', 'no_verify']) {
     it(`fails deny_path_passed when ${field} is false`, () => {
       const broken = { ...validNegativeEvidence(), [field]: false };
-      const evidence = evaluateEvidence({
+      const evidence = buildEvidence({
         health: validHealth(),
         allowRun: null,
         commit: null,
@@ -330,7 +235,7 @@ describe('evidence contract — negative evidence completeness', () => {
 
     it(`fails full_demo_passed when ${field} is false`, () => {
       const broken = { ...validNegativeEvidence(), [field]: false };
-      const evidence = evaluateEvidence({
+      const evidence = buildEvidence({
         health: validHealth(),
         allowRun: validAllowRun(),
         commit: validCommit(),
@@ -346,7 +251,7 @@ describe('evidence contract — negative evidence completeness', () => {
   }
 
   it('fails when negativeEvidence is null', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: null,
       commit: null,
@@ -363,7 +268,7 @@ describe('evidence contract — negative evidence completeness', () => {
 
 describe('evidence contract — incomplete on missing/invalid commit or verify (§18.3 #46–#48)', () => {
   it('missing verify yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -378,7 +283,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
   });
 
   it('digest mismatch yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: { ...validCommit(), output_digest: HEX64_B },
@@ -393,7 +298,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
   });
 
   it('record_hash mismatch between commit and verify yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -408,7 +313,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
   });
 
   it('decision_id mismatch between verify and allow yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -423,7 +328,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
   });
 
   it('invalid (non-hex64) record_hash yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: { ...validCommit(), record_hash: 'not-a-hash' },
@@ -438,7 +343,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
   });
 
   it('verify.integrity false yields incomplete', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -455,7 +360,7 @@ describe('evidence contract — incomplete on missing/invalid commit or verify (
 
 describe('evidence contract — schema markers (§18.3 #49–#50)', () => {
   it('schema_version and evidence_assembly_order are fixed literals', () => {
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: null,
       commit: null,
@@ -476,7 +381,7 @@ describe('evidence contract — schema markers (§18.3 #49–#50)', () => {
     const artifacts = validArtifacts();
     assert.equal(artifacts.gateway_observed_artifact_content, false);
 
-    const evidence = evaluateEvidence({
+    const evidence = buildEvidence({
       health: validHealth(),
       allowRun: validAllowRun(),
       commit: validCommit(),
@@ -498,9 +403,7 @@ describe('evidence contract — path_result semantics (item 8)', () => {
     // Whitepaper §15.1 defines only:
     //   'full_demo_passed' | 'deny_path_passed' | 'incomplete'
     // There is no 'failed' value. Both true runtime errors and partial
-    // runs collapse to 'incomplete'. This matches the normative schema;
-    // restoring 'failed' would require an Owner decision and a type change,
-    // which is out of scope for this test step.
+    // runs collapse to 'incomplete'. This matches the normative schema.
     const allowed = new Set([
       'full_demo_passed',
       'deny_path_passed',
@@ -508,7 +411,7 @@ describe('evidence contract — path_result semantics (item 8)', () => {
     ]);
 
     const cases = [
-      evaluateEvidence({
+      buildEvidence({
         health: validHealth(),
         allowRun: validAllowRun(),
         commit: validCommit(),
@@ -517,7 +420,7 @@ describe('evidence contract — path_result semantics (item 8)', () => {
         artifacts: validArtifacts(),
         negativeEvidence: validNegativeEvidence(),
       }),
-      evaluateEvidence({
+      buildEvidence({
         health: validHealth(),
         allowRun: null,
         commit: null,
@@ -526,7 +429,7 @@ describe('evidence contract — path_result semantics (item 8)', () => {
         artifacts: null,
         negativeEvidence: validNegativeEvidence(),
       }),
-      evaluateEvidence({
+      buildEvidence({
         health: validHealth(),
         allowRun: validAllowRun(),
         commit: null,
@@ -543,10 +446,5 @@ describe('evidence contract — path_result semantics (item 8)', () => {
         `unexpected path_result: ${evidence.path_result}`,
       );
     }
-
-    // Documented limitation (not a test failure):
-    // a genuine runtime error and a merely incomplete run both yield
-    // path_result === 'incomplete'. Distinction would need a 'failed'
-    // value in the type contract (Owner decision required).
   });
 });
