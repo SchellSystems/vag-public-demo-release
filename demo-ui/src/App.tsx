@@ -109,22 +109,25 @@ function App() {
       log(`Verified: integrity=${verifyResult.integrity}`);
       setFlowStatus('Verify', 'verified');
 
-      // 6. Deny path
+      // 6. Deny path (separate; produces UI-derived negative evidence only)
       log('Submitting deny proposal (scope.intent: demo.forbidden_action)...');
       const denyResult = await proposeDeny();
       log(`Deny decision: ${denyResult.decision}`);
 
       const negativeEvidence = {
-        denied: true,
+        denied: true as const,
         proposal_id: denyResult.proposal_id,
-        no_tool_grant: true,
-        no_commit: true,
-        no_verify: true,
-        reason: 'Gateway denied proposal. No ToolGrant, Commit, or Verify produced in bounded deny path.',
+        no_local_artifact: true as const,
+        no_commit: true as const,
+        no_verify: true as const,
+        scope: 'bounded_ui_path_only' as const,
+        source: 'ui_derived_from_gateway_deny' as const,
+        reason: 'Gateway denied the proposal; this UI path created no local follow-on artifact and did not call Commit or Verify.',
+        non_claim: 'does_not_prove_system_wide_non_execution' as const,
       };
-      log('Negative evidence recorded (no ToolGrant, no Commit, no Verify).');
+      log('Negative evidence recorded (no local artifact, no Commit, no Verify).');
 
-      // Build complete evidence
+      // 7. Evidence Assembly (after Commit and Verify)
       const fullEvidence = buildEvidence({
         health: healthResult,
         allowRun: allowResult,
@@ -132,11 +135,13 @@ function App() {
         verify: verifyResult,
         denyRun: denyResult,
         artifacts: {
-          controlled_tool_path: 'demo.transform_json',
+          artifact_kind: 'synthetic_local_json',
+          controlled_demo_path: 'demo.transform_json',
           output_digest: outputDigest,
           proposal_id: allowResult.proposal_id,
           committed: true,
           verified: true,
+          gateway_observed_artifact_content: false,
         },
         negativeEvidence,
       });
@@ -174,14 +179,17 @@ function App() {
       setFlowStatus('Verify', 'blocked');
 
       const negativeEvidence = {
-        denied: true,
+        denied: true as const,
         proposal_id: denyResult.proposal_id,
-        no_tool_grant: true,
-        no_commit: true,
-        no_verify: true,
-        reason: 'Gateway denied proposal. No ToolGrant, Commit, or Verify produced in bounded deny path.',
+        no_local_artifact: true as const,
+        no_commit: true as const,
+        no_verify: true as const,
+        scope: 'bounded_ui_path_only' as const,
+        source: 'ui_derived_from_gateway_deny' as const,
+        reason: 'Gateway denied the proposal; this UI path created no local follow-on artifact and did not call Commit or Verify.',
+        non_claim: 'does_not_prove_system_wide_non_execution' as const,
       };
-      log('Negative evidence: no ToolGrant, no Commit, no Verify.');
+      log('Negative evidence: no local artifact, no Commit, no Verify.');
 
       const denyEvidence = buildEvidence({
         health: healthResult,
