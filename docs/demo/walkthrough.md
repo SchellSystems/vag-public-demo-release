@@ -64,7 +64,7 @@ Click **"Allow Demo"** or **"Run Gateway-Bound Demo"**:
 5. UI computes and supplies `output_digest` with `decision_id`
 6. Commit binds proposal, decision, and the caller-supplied digest
 7. Verify checks stored hash, signature, and reference relationships
-8. Deny path demonstrates UI-derived negative evidence (bounded public-demo path only)
+8. Deny path demonstrates UI-derived negative evidence (bounded to the observed UI path only)
 
 ### 6. Run Deny Path
 
@@ -76,7 +76,7 @@ Click **"Deny Demo"**:
 4. The bounded UI flow creates no local demo artifact
 5. No Commit or Verify follows in that UI flow
 6. The gateway would reject a commit attempt for the denied proposal
-7. UI-derived negative evidence is recorded for this bounded path
+7. UI-derived negative evidence is recorded for this observed UI path
 
 ### 7. Review Evidence
 
