@@ -47,7 +47,7 @@ Agent Proposal
 
 Prerequisite:
 
-- Node.js `>=20.19.0`; Node.js 22 is used by the public demo audit workflow.
+- Node.js `>=20.19.0`; the public demo audit workflow validates Node.js 20.19 and 22.
 
 Install dependencies and run the automated local smoke test:
 
@@ -66,7 +66,7 @@ npm run gateway
 npm run dev
 ```
 
-The demo gateway listens on `:4400`. The demo UI runs on `:5173`.
+The demo gateway listens on `http://127.0.0.1:4400`. The demo UI runs on `http://127.0.0.1:5173`.
 
 ## Bounded Demo Logic
 
@@ -127,7 +127,3 @@ This repository is a public bounded local demo. It illustrates a reviewable prop
 ## License
 
 This project is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome under the Apache License, Version 2.0. See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
