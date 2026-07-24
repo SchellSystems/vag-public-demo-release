@@ -7,6 +7,11 @@
   "main": "desktop/main.mjs",
   "productName": "VAG Bounded Demo",
   "description": "VAG Bounded Demo — Local bounded gateway verification demonstration. Not production, not a sandbox, not system-wide enforcement.",
+  "author": {
+    "name": "Pascal Schell",
+    "email": "Pascal.schell@schell-systems.de",
+    "url": "https://www.schell-systems.de"
+  },
   "workspaces": [
     "demo-gateway",
     "demo-ui"
