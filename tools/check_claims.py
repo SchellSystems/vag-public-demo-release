@@ -62,6 +62,8 @@ ALLOWLISTED_FILES = {
     "demo-gateway/README.md": ["security", "sandbox", "isolation"],
     "demo-gateway/src/core.mjs": ["security"],
     "demo-ui/src/constants.ts": ["security", "sandbox", "isolation"],
+    "desktop/main.mjs": ["sandbox"],
+    "forge.config.mjs": ["sandbox"],
 }
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "dist"}

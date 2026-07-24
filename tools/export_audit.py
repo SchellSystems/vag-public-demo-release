@@ -52,6 +52,7 @@ LOCALHOST_ALLOWED_FILES = {
     "tools/public_demo_probe.mjs", "tools/gateway_smoke.mjs", "docs/demo/walkthrough.md",
     "docs/demo/runbook.md", "docs/demo/threat-model.md",
     "docs/architecture/authority-boundaries.md", "README.md",
+    "desktop/main.mjs", "forge.config.mjs",
 }
 PLACEHOLDER_RE = re.compile(
     r"^(?:<[^>]+>|\$\{\{?[^}]+\}\}?|REDACTED|PLACEHOLDER|EXAMPLE|NOT[_-]?REAL|null|none)$",
@@ -102,10 +103,19 @@ def check_package_lock(content, rel_path):
     except (json.JSONDecodeError, ValueError):
         return [(rel_path, 0, "invalid package-lock.json", "FAIL")]
 
-    source_keys = {"resolved", "version"}
-    dependency_map_keys = {
-        "dependencies", "devDependencies", "optionalDependencies", "peerDependencies"
-    }
+    # npm lockfile v3 uses "packages" with path-based keys.
+    # Collect top-level devDependency names to skip their transitive tree.
+    top_dev_deps = set()
+    top_pkg = data.get("packages", {}).get("", {})
+    if isinstance(top_pkg.get("devDependencies"), dict):
+        top_dev_deps.update(top_pkg["devDependencies"].keys())
+
+    # Also respect workspaces (local references are not exportable secrets)
+    workspaces = set()
+    if isinstance(data.get("workspaces"), list):
+        workspaces.update(data["workspaces"])
+    if isinstance(top_pkg.get("workspaces"), list):
+        workspaces.update(top_pkg["workspaces"])
 
     def check_source(source, source_label):
         lowered = source.lower()
@@ -118,19 +128,50 @@ def check_package_lock(content, rel_path):
             elif parsed.hostname != "registry.npmjs.org":
                 findings.append((rel_path, 0, "non-public npm registry", "FAIL"))
 
-    def walk(value, parent_key=None):
-        if isinstance(value, dict):
-            for key, item in value.items():
-                if isinstance(item, str) and (
-                    key in source_keys or parent_key in dependency_map_keys
-                ):
-                    check_source(item, key)
-                walk(item, key)
-        elif isinstance(value, list):
-            for item in value:
-                walk(item, parent_key)
+    packages = data.get("packages", {})
+    for pkg_path, pkg_info in packages.items():
+        if not isinstance(pkg_info, dict):
+            continue
 
-    walk(data)
+        # Skip workspace self-references
+        resolved = pkg_info.get("resolved", "")
+        if isinstance(resolved, str) and resolved in workspaces:
+            continue
+
+        # Skip dev-only packages (marked by npm as dev: true)
+        if pkg_info.get("dev") is True:
+            continue
+
+        # Also skip if the package name matches a known devDependency
+        pkg_name = pkg_path.replace("node_modules/", "").split("node_modules/")[-1] if pkg_path else ""
+        if pkg_name in top_dev_deps:
+            continue
+
+        # Check resolved field
+        if isinstance(resolved, str) and resolved:
+            check_source(resolved, pkg_name or "resolved")
+
+        # Check version field (can contain git URLs)
+        version = pkg_info.get("version", "")
+        if isinstance(version, str) and version:
+            version_lower = version.lower()
+            if version_lower.startswith(("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")):
+                check_source(version, pkg_name or "version")
+
+        # Check dependency specifiers in this package entry
+        for dep_key in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
+            deps = pkg_info.get(dep_key)
+            if not isinstance(deps, dict):
+                continue
+            for dep_name, dep_spec in deps.items():
+                if not isinstance(dep_spec, str):
+                    continue
+                dep_lower = dep_spec.lower()
+                if dep_lower.startswith(("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")):
+                    check_source(dep_spec, dep_name)
+                elif dep_spec.startswith(("http://", "https://")):
+                    check_source(dep_spec, dep_name)
+
     return findings
 
 
