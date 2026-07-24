@@ -113,6 +113,71 @@ class ExportAuditTests(unittest.TestCase):
         }
         self.assert_fails({"package-lock.json": json.dumps(lock)})
 
+    def test_git_source_in_dev_dependency_still_fails(self):
+        # A git/ssh source inside a dev-flagged package MUST still be reported.
+        # This proves devDependencies are not blanket-skipped.
+        source = "git+ssh:" + "//git@github.com/attacker/evil.git#deadbeef"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/evil-tool": {"dev": True, "resolved": source},
+            },
+        }
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
+
+    def test_foreign_ssh_source_still_fails(self):
+        # A plain ssh:// source for an arbitrary package must be reported.
+        source = "ssh:" + "//git@gitlab.example.com/team/pkg.git"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {"node_modules/pkg": {"resolved": source}},
+        }
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
+
+    def test_allowlisted_electron_node_gyp_source_passes(self):
+        # The pinned Electron build-tooling source is narrowly exempted.
+        base = "git+ssh:" + "//git@github.com/electron/node-gyp.git"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/@electron/node-gyp": {
+                    "dev": True,
+                    "resolved": base + "#06b29aafb7708acef8b3669835c8a7857ebc92d2",
+                },
+            },
+        }
+        self.assert_passes({"package-lock.json": json.dumps(lock)})
+
+    def test_allowlist_is_exact_wrong_package_name_still_fails(self):
+        # Same Electron URL under a DIFFERENT package name must still fail:
+        # the allowlist is an exact (package, source) pair, not a host pass.
+        base = "git+ssh:" + "//git@github.com/electron/node-gyp.git"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/not-node-gyp": {
+                    "dev": True,
+                    "resolved": base + "#06b29aafb7708acef8b3669835c8a7857ebc92d2",
+                },
+            },
+        }
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
+
+    def test_allowlist_is_exact_wrong_host_still_fails(self):
+        # The allowlisted package name pointed at a FOREIGN host must fail:
+        # the source base must match exactly, not just the package name.
+        source = "git+ssh:" + "//git@github.com/attacker/node-gyp.git#deadbeef"
+        lock = {
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/@electron/node-gyp": {
+                    "dev": True,
+                    "resolved": source,
+                },
+            },
+        }
+        self.assert_fails({"package-lock.json": json.dumps(lock)})
+
     def test_valid_conceptual_evidence_passes(self):
         self.assert_passes({
             "examples/evidence/example.public.json": json.dumps(self.evidence())

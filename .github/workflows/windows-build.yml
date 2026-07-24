@@ -1,0 +1,168 @@
+name: Windows Desktop Build (manual)
+
+# Manual-only build of the VAG Bounded Demo Windows x64 package.
+# Produces a single private GitHub Actions artifact containing the installer,
+# ZIP, hashes, and provenance. It does NOT sign, release, tag, or deploy.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or commit SHA to build"
+        required: true
+        default: desktop-electron-finish
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout requested ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 0
+
+      - name: Resolve checked-out commit
+        shell: pwsh
+        run: |
+          $sha = git rev-parse HEAD
+          "BUILD_COMMIT_SHA=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Checked-out commit: $sha"
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      # --- Full gates BEFORE packaging ---
+      - name: Audit fixture tests
+        run: python -m unittest discover -s test/audit -p "test_*.py"
+
+      - name: Claim audit
+        run: python tools/check_claims.py .
+
+      - name: Export audit
+        run: python tools/export_audit.py .
+
+      - name: Runtime dependency audit
+        run: npm audit --omit=dev
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build demo-ui
+        run: npm run build
+
+      - name: Gateway smoke
+        run: npm run smoke
+
+      # --- Packaging ---
+      - name: Package + make Windows distributables
+        run: npx electron-forge make --platform=win32 --arch=x64
+
+      # --- Collect and canonically rename artifacts ---
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $bundle = Join-Path $env:GITHUB_WORKSPACE "artifact-bundle"
+          New-Item -ItemType Directory -Force -Path $bundle | Out-Null
+
+          # Squirrel installer (.exe) — find under out/make/squirrel.windows
+          $exe = Get-ChildItem -Path "out/make/squirrel.windows" -Recurse -Filter "*.exe" |
+                 Where-Object { $_.Name -notmatch "Update.exe" } |
+                 Select-Object -First 1
+          if ($null -eq $exe) { throw "No Squirrel .exe installer found" }
+          Copy-Item $exe.FullName (Join-Path $bundle "VAG-Bounded-Demo-Setup-x64.exe")
+          Write-Host "Installer: $($exe.FullName)"
+
+          # ZIP distributable — find under out/make/zip/win32
+          $zip = Get-ChildItem -Path "out/make/zip/win32" -Recurse -Filter "*.zip" |
+                 Select-Object -First 1
+          if ($null -eq $zip) { throw "No ZIP distributable found" }
+          Copy-Item $zip.FullName (Join-Path $bundle "VAG-Bounded-Demo-win32-x64.zip")
+          Write-Host "ZIP: $($zip.FullName)"
+
+          Get-ChildItem $bundle
+
+      # --- Non-interactive packaged runtime smoke (best-effort) ---
+      - name: Packaged runtime smoke (best-effort)
+        id: smoke
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference = "Continue"
+          $exe = Get-ChildItem -Path "out" -Recurse -Filter "VAGBoundedDemo.exe" |
+                 Where-Object { $_.FullName -notmatch "squirrel" } |
+                 Select-Object -First 1
+          if ($null -eq $exe) {
+            Write-Host "Packaged exe not found for smoke"
+            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+          Write-Host "Running packaged smoke: $($exe.FullName) --smoke-test"
+          $p = Start-Process -FilePath $exe.FullName -ArgumentList "--smoke-test" -PassThru -NoNewWindow
+          $exited = $p.WaitForExit(60000)
+          if (-not $exited) {
+            Write-Host "Smoke timed out"
+            try { $p.Kill() } catch {}
+            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+          Write-Host "Smoke exit code: $($p.ExitCode)"
+          if ($p.ExitCode -eq 0) {
+            "result=PASS" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      # --- Manifest, provenance, report ---
+      - name: Generate manifest, provenance, and report
+        shell: pwsh
+        env:
+          BUNDLE_DIR: ${{ github.workspace }}/artifact-bundle
+          SMOKE_RESULT: ${{ steps.smoke.outputs.result }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_REF_NAME: ${{ github.event.inputs.ref }}
+          GH_SHA: ${{ env.BUILD_COMMIT_SHA }}
+          GH_RUN_ID: ${{ github.run_id }}
+        run: node tools/windows_artifact_manifest.mjs
+
+      - name: Verify bundle hashes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $bundle = Join-Path $env:GITHUB_WORKSPACE "artifact-bundle"
+          $sums = Get-Content (Join-Path $bundle "SHA256SUMS.txt")
+          foreach ($line in $sums) {
+            if ($line.Trim() -eq "") { continue }
+            $parts = $line -split "\s+", 2
+            $expected = $parts[0]
+            $name = $parts[1].Trim()
+            $actual = (Get-FileHash (Join-Path $bundle $name) -Algorithm SHA256).Hash.ToLower()
+            if ($actual -ne $expected) {
+              throw "Hash mismatch for $name: expected $expected got $actual"
+            }
+            Write-Host "OK $name"
+          }
+
+      - name: Upload Windows artifact bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: VAG-Bounded-Demo-Windows-x64
+          path: artifact-bundle/**
+          retention-days: 14
+          if-no-files-found: error

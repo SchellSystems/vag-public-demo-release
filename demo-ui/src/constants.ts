@@ -2,7 +2,7 @@
 export const GATEWAY_URL = 'http://127.0.0.1:4400';
 
 /** Demo mode label */
-export const DEMO_MODE = 'Local Demo / Gateway-Bound Demo';
+export const DEMO_MODE = 'Local Bounded Demonstration';
 
 /** Non-claims that must remain visible in the UI */
 export const NON_CLAIMS: string[] = [
