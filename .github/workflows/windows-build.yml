@@ -154,7 +154,7 @@ jobs:
             $name = $parts[1].Trim()
             $actual = (Get-FileHash (Join-Path $bundle $name) -Algorithm SHA256).Hash.ToLower()
             if ($actual -ne $expected) {
-              throw "Hash mismatch for $name: expected $expected got $actual"
+              throw "Hash mismatch for ${name}: expected $expected got $actual"
             }
             Write-Host "OK $name"
           }
