@@ -11,7 +11,6 @@ export default {
     name: 'VAGBoundedDemo',
     executableName: 'VAGBoundedDemo',
     appVersion: '0.1.0',
-    icon: './desktop/icon',
     asar: true,
     // Only package necessary files
     ignore: [
@@ -46,6 +45,7 @@ export default {
         name: 'VAGBoundedDemo',
         title: 'VAG Bounded Demo',
         description: 'VAG Bounded Demo — Local bounded gateway verification demonstration',
+        authors: 'Pascal Schell – Schell Systems',
         // No certificate configured — UNSIGNED_TEST_DISTRIBUTABLE
         // certificateFile: undefined,
         // certificatePassword: undefined,
