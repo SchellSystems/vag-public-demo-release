@@ -27,6 +27,13 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
           fetch-depth: 0
 
+      - name: Resolve checked-out commit
+        shell: pwsh
+        run: |
+          $sha = git rev-parse HEAD
+          "BUILD_COMMIT_SHA=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Checked-out commit: $sha"
+
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -130,7 +137,7 @@ jobs:
           SMOKE_RESULT: ${{ steps.smoke.outputs.result }}
           GH_REPOSITORY: ${{ github.repository }}
           GH_REF_NAME: ${{ github.event.inputs.ref }}
-          GH_SHA: ${{ github.sha }}
+          GH_SHA: ${{ env.BUILD_COMMIT_SHA }}
           GH_RUN_ID: ${{ github.run_id }}
         run: node tools/windows_artifact_manifest.mjs
 
