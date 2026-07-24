@@ -20,25 +20,61 @@ const INITIAL_FLOW: FlowStep[] = [
 ];
 
 function DemoFlow({ steps }: { steps: FlowStep[] }) {
-  const colors: Record<FlowStep['status'], string> = {
-    pending: '#cbd5e1',
-    allowed: '#2563eb',
-    denied: '#dc2626',
-    committed: '#059669',
-    verified: '#16a34a',
-    blocked: '#7f1d1d',
+  const colors: Record<FlowStep['status'], { bg: string; border: string; text: string }> = {
+    pending: { bg: '#f1f5f9', border: '#cbd5e1', text: '#64748b' },
+    allowed: { bg: '#eff6ff', border: '#2563eb', text: '#1d4ed8' },
+    denied: { bg: '#fef2f2', border: '#dc2626', text: '#b91c1c' },
+    committed: { bg: '#ecfdf5', border: '#059669', text: '#047857' },
+    verified: { bg: '#f0fdf4', border: '#16a34a', text: '#15803d' },
+    blocked: { bg: '#fef2f2', border: '#991b1b', text: '#7f1d1d' },
+  };
+
+  const statusLabels: Record<FlowStep['status'], string> = {
+    pending: 'Waiting',
+    allowed: 'Allowed',
+    denied: 'Denied',
+    committed: 'Committed',
+    verified: 'Verified',
+    blocked: 'Blocked',
   };
 
   return (
     <section style={{ marginBottom: 24 }}>
-      <h3 style={{ marginBottom: 12 }}>Demo Flow</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
-        {steps.map((step) => (
-          <div key={step.label} style={{ border: `2px solid ${colors[step.status]}`, borderRadius: 6, padding: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 700 }}>{step.label}</div>
-            <div style={{ fontSize: 12, color: colors[step.status] }}>{step.status}</div>
-          </div>
-        ))}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        overflowX: 'auto',
+        padding: '4px 0',
+      }}>
+        {steps.map((step, idx) => {
+          const c = colors[step.status];
+          return (
+            <div key={step.label} style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{
+                background: c.bg,
+                border: `2px solid ${c.border}`,
+                borderRadius: 8,
+                padding: '12px 16px',
+                minWidth: 110,
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {step.label}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: c.text, marginTop: 4 }}>
+                  {statusLabels[step.status]}
+                </div>
+              </div>
+              {idx < steps.length - 1 && (
+                <div style={{ color: '#94a3b8', fontSize: 18, margin: '0 2px', flexShrink: 0 }}>
+                  {'\u2192'}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -214,18 +250,32 @@ function App() {
   }
 
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 900, margin: '0 auto', padding: 24 }}>
-      <DemoHeader mode={DEMO_MODE} gatewayUrl={GATEWAY_URL} />
-      <NonClaimsPanel claims={NON_CLAIMS} />
-      <DemoControls
-        phase={phase}
-        onDeny={runDenyOnly}
-        onRunFull={runAllowPath}
-        onReset={resetDemo}
-      />
-      <DemoFlow steps={flow} />
-      <StatusLog logs={logs} />
-      {evidence && <EvidencePanel evidence={evidence} />}
+    <div style={{
+      minHeight: '100vh',
+      background: '#f8fafc',
+    }}>
+      <div style={{
+        maxWidth: 960,
+        margin: '0 auto',
+        padding: '32px 24px',
+      }}>
+        <DemoHeader mode={DEMO_MODE} gatewayUrl={GATEWAY_URL} />
+
+        <DemoControls
+          phase={phase}
+          onDeny={runDenyOnly}
+          onRunFull={runAllowPath}
+          onReset={resetDemo}
+        />
+
+        <DemoFlow steps={flow} />
+
+        <StatusLog logs={logs} />
+
+        {evidence && <EvidencePanel evidence={evidence} />}
+
+        <NonClaimsPanel claims={NON_CLAIMS} />
+      </div>
     </div>
   );
 }
