@@ -17,7 +17,7 @@
 
 import { app, BrowserWindow, dialog } from 'electron';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { existsSync } from 'node:fs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,7 +72,8 @@ async function startGateway() {
   // Set env to prevent CLI auto-start when importing
   process.env.__DEMO_GATEWAY_PROGRAMMATIC__ = '1';
 
-  const { startDemoServer } = await import(GATEWAY_PATH);
+  // Node ESM requires file:// URLs for absolute paths (esp. Windows D:\...).
+  const { startDemoServer } = await import(pathToFileURL(GATEWAY_PATH).href);
 
   if (!existsSync(UI_DIST)) {
     throw new Error(
