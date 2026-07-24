@@ -52,12 +52,43 @@ LOCALHOST_ALLOWED_FILES = {
     "tools/public_demo_probe.mjs", "tools/gateway_smoke.mjs", "docs/demo/walkthrough.md",
     "docs/demo/runbook.md", "docs/demo/threat-model.md",
     "docs/architecture/authority-boundaries.md", "README.md",
-    "desktop/main.mjs", "forge.config.mjs",
 }
 PLACEHOLDER_RE = re.compile(
     r"^(?:<[^>]+>|\$\{\{?[^}]+\}\}?|REDACTED|PLACEHOLDER|EXAMPLE|NOT[_-]?REAL|null|none)$",
     re.I,
 )
+
+# Narrow, EXACT-MATCH allowlist for non-registry lockfile sources.
+# Keyed by package name -> set of allowed source bases (the part before any
+# '#<commit>' fragment). This intentionally does NOT blanket-skip
+# devDependencies: every other git/ssh/file/foreign-registry source, in any
+# dependency tree and regardless of the dev flag, is still reported as FAIL.
+# Only the pinned Electron-owned build tooling that Electron Forge requires is
+# exempted here.
+ALLOWED_NONREGISTRY_LOCKFILE_SOURCES = {
+    "@electron/node-gyp": {
+        "git+ssh://git@github.com/electron/node-gyp.git",
+        "git+https://github.com/electron/node-gyp.git",
+    },
+}
+
+
+def lockfile_source_base(source):
+    """Return the source without its '#<commit>' fragment for allowlist match."""
+    return source.split("#", 1)[0]
+
+
+def package_name_from_lock_path(pkg_path):
+    """Extract the installed package name from a lockfile-v3 packages key."""
+    if "node_modules/" in pkg_path:
+        return pkg_path.rsplit("node_modules/", 1)[-1]
+    return pkg_path
+
+
+def is_allowlisted_lockfile_source(pkg_name, source):
+    """True only for an exact (package, source-base) pair in the allowlist."""
+    allowed = ALLOWED_NONREGISTRY_LOCKFILE_SOURCES.get(pkg_name)
+    return bool(allowed) and lockfile_source_base(source) in allowed
 
 
 def is_text_file(filepath):
@@ -104,13 +135,8 @@ def check_package_lock(content, rel_path):
         return [(rel_path, 0, "invalid package-lock.json", "FAIL")]
 
     # npm lockfile v3 uses "packages" with path-based keys.
-    # Collect top-level devDependency names to skip their transitive tree.
-    top_dev_deps = set()
+    # Workspace directory references are local, not exportable secrets.
     top_pkg = data.get("packages", {}).get("", {})
-    if isinstance(top_pkg.get("devDependencies"), dict):
-        top_dev_deps.update(top_pkg["devDependencies"].keys())
-
-    # Also respect workspaces (local references are not exportable secrets)
     workspaces = set()
     if isinstance(data.get("workspaces"), list):
         workspaces.update(data["workspaces"])
@@ -128,37 +154,38 @@ def check_package_lock(content, rel_path):
             elif parsed.hostname != "registry.npmjs.org":
                 findings.append((rel_path, 0, "non-public npm registry", "FAIL"))
 
+    def guarded_check(source, pkg_name):
+        # Bypass ONLY exact allowlisted (package, source) pairs. All other
+        # git/ssh/file/foreign sources — including dev dependencies — are
+        # still checked and reported.
+        if is_allowlisted_lockfile_source(pkg_name, source):
+            return
+        check_source(source, pkg_name or "resolved")
+
     packages = data.get("packages", {})
     for pkg_path, pkg_info in packages.items():
         if not isinstance(pkg_info, dict):
             continue
 
-        # Skip workspace self-references
+        pkg_name = package_name_from_lock_path(pkg_path)
+
+        # Skip workspace self-references (bare local directory paths).
         resolved = pkg_info.get("resolved", "")
         if isinstance(resolved, str) and resolved in workspaces:
             continue
 
-        # Skip dev-only packages (marked by npm as dev: true)
-        if pkg_info.get("dev") is True:
-            continue
-
-        # Also skip if the package name matches a known devDependency
-        pkg_name = pkg_path.replace("node_modules/", "").split("node_modules/")[-1] if pkg_path else ""
-        if pkg_name in top_dev_deps:
-            continue
-
-        # Check resolved field
+        # Check resolved field for EVERY package, dev or not.
         if isinstance(resolved, str) and resolved:
-            check_source(resolved, pkg_name or "resolved")
+            guarded_check(resolved, pkg_name)
 
-        # Check version field (can contain git URLs)
+        # Check version field when it carries a source specifier.
         version = pkg_info.get("version", "")
-        if isinstance(version, str) and version:
-            version_lower = version.lower()
-            if version_lower.startswith(("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")):
-                check_source(version, pkg_name or "version")
+        if isinstance(version, str) and version.lower().startswith(
+            ("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")
+        ):
+            guarded_check(version, pkg_name)
 
-        # Check dependency specifiers in this package entry
+        # Check dependency specifiers declared in this package entry.
         for dep_key in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
             deps = pkg_info.get(dep_key)
             if not isinstance(deps, dict):
@@ -168,9 +195,9 @@ def check_package_lock(content, rel_path):
                     continue
                 dep_lower = dep_spec.lower()
                 if dep_lower.startswith(("file:", "git:", "git+ssh:", "git+https:", "git://", "ssh:")):
-                    check_source(dep_spec, dep_name)
+                    guarded_check(dep_spec, dep_name)
                 elif dep_spec.startswith(("http://", "https://")):
-                    check_source(dep_spec, dep_name)
+                    guarded_check(dep_spec, dep_name)
 
     return findings
 
