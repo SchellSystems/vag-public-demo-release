@@ -273,6 +273,48 @@ Resolutions come from the owner clarification recorded in `bugfix.md` (addendum 
 | **BU4** | **OPEN — narrowed** | ASAR surface owner-reported clean (HISTORICAL, unrevalidated); installer `.exe` / `.nupkg` UNKNOWN. Owner decides whether an authorized Windows candidate build establishes the baseline before merge, or 3.5/PC7 stays UNKNOWN | E7.5, E7.6, addendum A5 |
 | **BU5** | **RESOLVED for this bugfix** | Owner kept the CI visibility gap (N1) and all of N2–N8 out of scope. The gap therefore **remains open after the fix, by decision**, and must be stated in the handoff | N1, E2.3, addendum A4 |
 
+## BU1 Resolution Record (2026-07-26)
+
+The owner resolved BU1 on 2026-07-26 by selecting M2 as the authorized remediation mechanism after independent testing of both M1 and M2 in a Phase B scratch validation environment.
+
+### M1: REJECTED
+
+Tested in scratch on base SHA `ed3b8d9`. Targeted nested overrides (scoped to `@electron/rebuild > tar`, `@electron/node-gyp > tar`, `cacache > tar`, `external-editor > tmp`) produce **ELSPROBLEMS / exit 1** on `npm ls tar tmp --all`. M1 does not produce a clean dependency tree and cannot satisfy FC1 + FC3 simultaneously.
+
+### M2: OWNER-AUTHORIZED SELECTED MECHANISM
+
+Tested in scratch on base SHA `ed3b8d9`. Exact root-level overrides `{"tar": "7.5.22", "tmp": "0.2.7"}` applied to the root `package.json`. All gates pass.
+
+**Evidence:** Phase B scratch validation on base SHA `ed3b8d9444d49f5ff2e28cd1c4c52092782e701c` with overrides `{"tar": "7.5.22", "tmp": "0.2.7"}`:
+
+| Gate | Result |
+|------|--------|
+| `npm ci` | exit 0 |
+| `npm ls tar tmp --all` | exit 0 (tar@7.5.22, tmp@0.2.7) |
+| `npm audit --omit=dev` | 0 vulnerabilities |
+| `npm audit --include=dev` | no `vulnerabilities.tar` / `vulnerabilities.tmp` entries |
+| `npm test` | 109 pass, 0 fail |
+| `npm run build` | pass (vite, 37 modules) |
+| `npm run smoke` | 45 passed, 0 failed |
+| Production closure | identical (9 entries, unchanged) |
+
+### Preservation checks status
+
+| Check | Status |
+|-------|--------|
+| PC1 (production closure equality) | PASS - 9 entries, identical versions |
+| PC2 (`npm audit --omit=dev` still 0/exit 0) | PASS |
+| PC3 (`npm test` passes) | PASS - 109 tests |
+| PC4 (`npm run build` + `npm run smoke` pass) | PASS |
+| PC5 (python audit/ci/claims/export gates) | PASS |
+| PC6 (file-set contract) | PASS - only permitted files changed |
+| PC7 (artifact content / installer surface) | **UNKNOWN** - pending packaging run |
+| PC8 (build-toolchain functional preservation) | **UNKNOWN** - pending packaging run |
+
+### Authorization
+
+Implementation of M2 is authorized on a separate branch (`fix/dependabot-tar-tmp-remediation`). The spec branch carries only this documentation update; the implementation branch carries the actual `package.json` / `package-lock.json` / test changes.
+
 ## Fix Implementation
 
 ### Status: NOT DESIGNED — blocked at the BU1 gate

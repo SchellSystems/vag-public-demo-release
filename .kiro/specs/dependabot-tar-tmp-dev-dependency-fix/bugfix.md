@@ -379,3 +379,58 @@ The existing manual workflow `.github/workflows/windows-build.yml` ("Windows Des
 - Build-tool compatibility under any crossed major (E6.11, E6.12 / PC8) — UNKNOWN.
 - Installer-surface content (`.exe`, `.nupkg`) and Windows compatibility of an override-based build (PC7 / BU4) — UNKNOWN.
 - Manual Windows installation and human browser/UI acceptance — UNKNOWN.
+
+---
+
+## Owner Decision Addendum - BU1 Resolution (2026-07-26)
+
+**This addendum is additive.** It records the owner's resolution of BU1 and the Phase B scratch validation that informed it. It does not edit, replace, or reinterpret any evidence entry above.
+
+### BU1 RESOLVED: Owner authorized M2 (exact root overrides)
+
+The owner authorized **M2** as the remediation mechanism on 2026-07-26: exact root-level overrides `{"tar": "7.5.22", "tmp": "0.2.7"}` applied to the root `package.json`.
+
+| Item | Decision | Class |
+|------|----------|-------|
+| Selected mechanism | **M2** - exact root overrides `{"tar": "7.5.22", "tmp": "0.2.7"}` | owner-decided (2026-07-26) |
+| Authorization | Owner authorized implementation of M2 on a separate branch | owner-decided (2026-07-26) |
+
+### M1 REJECTED: independently tested, produces ELSPROBLEMS
+
+M1 (targeted nested overrides scoped to specific requirer paths) was independently tested in a Phase B scratch validation. Result: `npm ls tar tmp --all` produces **exit 1 / ELSPROBLEMS** with targeted nested overrides (invalid peer dependency resolution). M1 does not produce a clean tree.
+
+| Check | M1 result | Class |
+|-------|-----------|-------|
+| `npm ls tar tmp --all` | exit 1, ELSPROBLEMS (invalid peer dependency resolution) | TESTED (scratch, 2026-07-26) |
+| Clean dependency tree | **FAIL** - M1 does not produce a clean tree | TESTED (scratch, 2026-07-26) |
+
+### tmp floor corrected
+
+The `tmp` override target is **0.2.7** (latest), not 0.2.6 (the minimum above the advisory range `<=0.2.5`). The advisory floor for the contract test remains `>= 0.2.6`; the override resolves to the latest available version above it.
+
+### Phase B scratch validation results (M2 on base SHA ed3b8d9)
+
+Scratch validation performed with overrides `{"tar": "7.5.22", "tmp": "0.2.7"}` applied to the root `package.json` at `BASE_SHA = ed3b8d9444d49f5ff2e28cd1c4c52092782e701c`:
+
+| Gate | Result | Class |
+|------|--------|-------|
+| `npm ci` | exit 0 | TESTED (scratch, 2026-07-26) |
+| `npm ls tar tmp --all` | exit 0 (`tar@7.5.22`, `tmp@0.2.7`) | TESTED (scratch, 2026-07-26) |
+| `npm audit --omit=dev` | 0 vulnerabilities | TESTED (scratch, 2026-07-26) |
+| `npm audit --include=dev` | no `vulnerabilities.tar` / `vulnerabilities.tmp` entries | TESTED (scratch, 2026-07-26) |
+| `npm test` | 109 pass, 0 fail | TESTED (scratch, 2026-07-26) |
+| `npm run build` | pass (vite, 37 modules) | TESTED (scratch, 2026-07-26) |
+| `npm run smoke` | 45 passed, 0 failed | TESTED (scratch, 2026-07-26) |
+| Production closure | identical (9 entries, unchanged) | TESTED (scratch, 2026-07-26) |
+
+All Phase B gates pass. M2 satisfies FC1, FC2, FC3, PC1, PC2, PC3, PC4, PC5.
+
+### Updated blocker state
+
+| ID | State | Note |
+|----|-------|------|
+| BU1 | **RESOLVED** | Owner selected M2; implementation authorized on branch `fix/dependabot-tar-tmp-remediation` |
+| BU2 | **RESOLVED for this bugfix** | unchanged from A3 |
+| BU3 | **RESOLVED for this bugfix** | unchanged from A2; must be re-executed before implementation branch creation |
+| BU4 | **OPEN - narrowed** | unchanged from A5; PC7/PC8 remain UNKNOWN pending packaging run |
+| BU5 | **RESOLVED for this bugfix** | unchanged from A4 |

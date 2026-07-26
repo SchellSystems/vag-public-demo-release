@@ -20,6 +20,15 @@ This is the canonical, corrected task plan. It supersedes the earlier generated 
 
 Stopping at task 1 with zero repository change outside this spec directory is a **correct terminal outcome** (expected behavior 2.4, design Property 3), not an incomplete result.
 
+### BU1 Resolution (2026-07-26)
+
+**Task 1 status: RESOLVED.** Owner selected **M2** (root overrides `tar=7.5.22`, `tmp=0.2.7`) as the authorized remediation mechanism on 2026-07-26.
+
+- **M1 REJECTED:** independently tested in scratch; `npm ls tar tmp --all` produces exit 1 / ELSPROBLEMS with targeted nested overrides. M1 does not produce a clean tree.
+- **M2 AUTHORIZED:** Phase B scratch validation on base SHA `ed3b8d9` confirms all gates pass (npm ci exit 0, npm ls exit 0, npm audit clean, npm test 109/0, build pass, smoke 45/0, production closure identical).
+- **Implementation authorized** on separate branch `fix/dependabot-tar-tmp-remediation`.
+- **Remaining tasks (2-11)** proceed as documented with M2 as the authorized mechanism. Task 2 creates the implementation branch; tasks 3-6 implement and verify M2; tasks 7-11 handle staging, commit, push, Windows verification, and closure.
+
 ## Prohibited throughout this plan (no task may perform these)
 
 - Merge, release, tag, deployment, publication, signing, repository visibility/settings changes.
