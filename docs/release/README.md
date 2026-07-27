@@ -12,7 +12,8 @@ These documents do not authorize a release, tag, deploy, package publication, vi
 
 ## Current Review Navigation
 
-- [PR #29 Controlled-Merge Closure Record](pr-29-closure-record-2026-07-27-035418z.md) — SHA-bound candidate validation and precise `BLOCKED` merge status; current canonical pointer for the PR #29 completion track
+- [PR #29 Post-Merge Closure Record](pr-29-post-merge-closure-record-2026-07-27-044543z.md) — current SHA-bound technical closure; status `PASS_WITH_RESIDUAL_MANUAL_ACCEPTANCE`
+- [Historical PR #29 Pre-Merge Closure Record](pr-29-closure-record-2026-07-27-035418z.md) — preserved `HISTORICAL_VALID_PRE_MERGE_RECORD`; its dated `BLOCKED` state is not current repository status
 - [Repository README](../../README.md) — current public entry point and bounded demo framing
 - [Three-Minute Demo Review](../demo/three-minute-review.md) — fastest reviewer path
 - [Post-Public Operational Baseline](public-demo-post-visibility-operational-state-2026-07-08.md) — dated review of the post-PR10 base state, recorded as `PUBLIC_DEMO_BASELINE_VERIFIED_WITH_NOTE`
