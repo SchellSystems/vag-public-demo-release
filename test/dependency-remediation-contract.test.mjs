@@ -28,6 +28,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOCKFILE_PATH = resolve(__dirname, '..', 'package-lock.json');
+const ROOT_PACKAGE_PATH = resolve(__dirname, '..', 'package.json');
+const GATEWAY_PACKAGE_PATH = resolve(__dirname, '..', 'demo-gateway', 'package.json');
+const UI_PACKAGE_PATH = resolve(__dirname, '..', 'demo-ui', 'package.json');
 
 /**
  * compareExactVersion(a, b) - strict numeric x.y.z comparison.
@@ -69,6 +72,18 @@ function compareExactVersion(a, b) {
     if (numA < numB) return -1;
   }
   return 0;
+}
+
+function parseMinimumNodeEngine(value) {
+  if (typeof value !== 'string') {
+    throw new Error(`Node engine must be a string, got: ${typeof value}`);
+  }
+  const match = /^>=(\d+\.\d+\.\d+)$/.exec(value);
+  if (match === null) {
+    throw new Error(`Node engine must be an exact minimum in the form >=x.y.z, got: "${value}"`);
+  }
+  compareExactVersion(match[1], '0.0.0');
+  return match[1];
 }
 
 describe('assertLockfileFloors', () => {
@@ -347,23 +362,29 @@ describe('electron packaging security remediation', () => {
     assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
   });
 
-  it('asserts vulnerable extract-zip@2.0.1 is not installed', () => {
+  it('asserts every extract-zip node is exactly the internal alias at 1.0.5', () => {
     // Strategy: root overrides alias "extract-zip" -> "npm:@electron-internal/extract-zip@1.0.5"
     // so any lockfile node for extract-zip must be the safe aliased package, not the unmaintained 2.0.1.
     // A node may be present (as an alias) but its "name" field must be "@electron-internal/extract-zip".
     const extractZipNodes = Object.entries(lockData.packages).filter(([key]) =>
       key === 'node_modules/extract-zip' || key.endsWith('/node_modules/extract-zip')
     );
+    assert.ok(extractZipNodes.length > 0, 'the extract-zip remediation alias must be installed');
     for (const [key, node] of extractZipNodes) {
       assert.equal(
         node.name,
         '@electron-internal/extract-zip',
         `extract-zip node at "${key}" must be the @electron-internal/extract-zip alias, got name=${node.name} version=${node.version}`
       );
+      assert.equal(
+        compareExactVersion(node.version, '1.0.5'),
+        0,
+        `extract-zip alias at "${key}" must resolve exactly to 1.0.5, got ${node.version}`
+      );
     }
   });
 
-  it('asserts @electron-internal/extract-zip is present (safe scoped package)', () => {
+  it('asserts every scoped @electron-internal/extract-zip node is >= 1.0.5', () => {
     // @electron-internal/extract-zip is the scoped safe package used by Electron itself.
     const internalNodes = Object.entries(lockData.packages).filter(([key]) =>
       key === 'node_modules/@electron-internal/extract-zip' ||
@@ -373,6 +394,13 @@ describe('electron packaging security remediation', () => {
       internalNodes.length > 0,
       '@electron-internal/extract-zip must be present (safe, distinct scoped package)'
     );
+    for (const [key, node] of internalNodes) {
+      const cmp = compareExactVersion(node.version, '1.0.5');
+      assert.ok(
+        cmp >= 0,
+        `@electron-internal/extract-zip at "${key}" version ${node.version} is below floor 1.0.5`
+      );
+    }
   });
 
   it('asserts @electron/packager is Forge-7-compatible 18.x (>= 18.3.5)', () => {
@@ -385,10 +413,33 @@ describe('electron packaging security remediation', () => {
     );
     assert.ok(packagerNodes.length > 0, '@electron/packager must exist in lockfile');
     for (const [key, node] of packagerNodes) {
+      compareExactVersion(node.version, '0.0.0');
       const cmp = compareExactVersion(node.version, '18.3.5');
       assert.ok(cmp >= 0, `@electron/packager at "${key}" version ${node.version} is below floor 18.3.5`);
       const major = Number(node.version.split('.')[0]);
       assert.equal(major, 18, `@electron/packager at "${key}" must be 18.x (Forge 7 compatible), got ${node.version}`);
+    }
+  });
+});
+
+describe('Node minimum baseline contract', () => {
+  it('asserts root, workspaces, and lockfile declare exactly >=22.12.0', () => {
+    const manifests = [
+      ['root package', JSON.parse(readFileSync(ROOT_PACKAGE_PATH, 'utf8'))],
+      ['demo-gateway package', JSON.parse(readFileSync(GATEWAY_PACKAGE_PATH, 'utf8'))],
+      ['demo-ui package', JSON.parse(readFileSync(UI_PACKAGE_PATH, 'utf8'))],
+    ];
+    const lockData = JSON.parse(readFileSync(LOCKFILE_PATH, 'utf8'));
+    const lockPackages = [
+      ['root lockfile package', lockData.packages?.['']],
+      ['demo-gateway lockfile package', lockData.packages?.['demo-gateway']],
+      ['demo-ui lockfile package', lockData.packages?.['demo-ui']],
+    ];
+
+    for (const [label, manifest] of [...manifests, ...lockPackages]) {
+      assert.ok(manifest !== undefined, `${label} must exist`);
+      const minimum = parseMinimumNodeEngine(manifest.engines?.node);
+      assert.equal(minimum, '22.12.0', `${label} must declare node >=22.12.0`);
     }
   });
 });
