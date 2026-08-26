@@ -1,15 +1,23 @@
 /**
  * dependency-remediation-contract.test.mjs
  *
- * Evidence-dated snapshot dependency contract (floors dated 2026-07-26).
+ * Evidence-dated snapshot dependency contract.
  * This is NOT a security gate, NOT an advisory scanner, NOT a substitute
  * for Dependabot. It is an offline, fail-closed, lockfile-bytes-only
  * contract that asserts minimum version floors for remediated transitive
  * dependencies in the resolved lockfile.
  *
- * Mechanism: M2 root overrides {tar: 7.5.22, tmp: 0.2.7}
- * Advisory floors: tar >= 7.5.21 (E5.3/E6.1), tmp >= 0.2.6 (E5.4/E6.3)
- * Production closure: 9 entries, no tar, no tmp (PC1).
+ * Floors dated 2026-07-26:
+ *   Mechanism: M2 root overrides {tar: 7.5.22, tmp: 0.2.7}
+ *   Advisory floors: tar >= 7.5.21 (E5.3/E6.1), tmp >= 0.2.6 (E5.4/E6.3)
+ *   Production closure: 9 entries, no tar, no tmp (PC1).
+ *
+ * Floors dated 2026-08-26:
+ *   undici >= 7.29.0 — CVE-2026-13697 (H), CVE-2026-16728 (M), et al.
+ *   fast-uri >= 3.1.6 — CVE-2026-18446, CVE-2026-75899, CVE-2026-75931, CVE-2026-76172
+ *   nanoid >= 3.3.18 — CVE-2026-67213
+ *   brace-expansion 1.x >= 1.1.18 — CVE-2026-14257 bypass (GHSA-rgw5-rvv9-x895)
+ *   brace-expansion 2.x >= 2.1.4 — CVE-2026-14257 bypass (GHSA-rgw5-rvv9-x895)
  */
 
 import { describe, it } from 'node:test';
@@ -105,6 +113,92 @@ describe('assertLockfileFloors', () => {
       assert.ok(cmp >= 0, `tmp node "${key}" version ${node.version} is below floor 0.2.6`);
     }
     // absent is acceptable - if no tmp nodes, test passes
+  });
+
+  it('asserts all undici nodes meet floor >= 7.29.0 or are absent', () => {
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+    const nodes = Object.entries(lockData.packages).filter(
+      ([key]) => key === 'node_modules/undici' || key.endsWith('/node_modules/undici')
+    );
+
+    for (const [key, node] of nodes) {
+      assert.ok(
+        typeof node.version === 'string' && node.version !== '',
+        `undici node "${key}" must have a valid version field`
+      );
+      const cmp = compareExactVersion(node.version, '7.29.0');
+      assert.ok(cmp >= 0, `undici node "${key}" version ${node.version} is below floor 7.29.0`);
+    }
+  });
+
+  it('asserts all fast-uri nodes meet floor >= 3.1.6 or are absent', () => {
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+    const nodes = Object.entries(lockData.packages).filter(
+      ([key]) => key === 'node_modules/fast-uri' || key.endsWith('/node_modules/fast-uri')
+    );
+
+    for (const [key, node] of nodes) {
+      assert.ok(
+        typeof node.version === 'string' && node.version !== '',
+        `fast-uri node "${key}" must have a valid version field`
+      );
+      const cmp = compareExactVersion(node.version, '3.1.6');
+      assert.ok(cmp >= 0, `fast-uri node "${key}" version ${node.version} is below floor 3.1.6`);
+    }
+  });
+
+  it('asserts all nanoid nodes meet floor >= 3.3.18 or are absent', () => {
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+    const nodes = Object.entries(lockData.packages).filter(
+      ([key]) => key === 'node_modules/nanoid' || key.endsWith('/node_modules/nanoid')
+    );
+
+    for (const [key, node] of nodes) {
+      assert.ok(
+        typeof node.version === 'string' && node.version !== '',
+        `nanoid node "${key}" must have a valid version field`
+      );
+      const cmp = compareExactVersion(node.version, '3.3.18');
+      assert.ok(cmp >= 0, `nanoid node "${key}" version ${node.version} is below floor 3.3.18`);
+    }
+  });
+
+  it('asserts all brace-expansion 1.x nodes meet floor >= 1.1.18 or are absent', () => {
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+    const nodes = Object.entries(lockData.packages).filter(
+      ([key]) => key === 'node_modules/brace-expansion' || key.endsWith('/node_modules/brace-expansion')
+    );
+
+    for (const [key, node] of nodes) {
+      assert.ok(
+        typeof node.version === 'string' && node.version !== '',
+        `brace-expansion node "${key}" must have a valid version field`
+      );
+      const major = Number(node.version.split('.')[0]);
+      if (major === 1) {
+        const cmp = compareExactVersion(node.version, '1.1.18');
+        assert.ok(cmp >= 0, `brace-expansion 1.x node "${key}" version ${node.version} is below floor 1.1.18`);
+      }
+    }
+  });
+
+  it('asserts all brace-expansion 2.x nodes meet floor >= 2.1.4 or are absent', () => {
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+    const nodes = Object.entries(lockData.packages).filter(
+      ([key]) => key === 'node_modules/brace-expansion' || key.endsWith('/node_modules/brace-expansion')
+    );
+
+    for (const [key, node] of nodes) {
+      assert.ok(
+        typeof node.version === 'string' && node.version !== '',
+        `brace-expansion node "${key}" must have a valid version field`
+      );
+      const major = Number(node.version.split('.')[0]);
+      if (major === 2) {
+        const cmp = compareExactVersion(node.version, '2.1.4');
+        assert.ok(cmp >= 0, `brace-expansion 2.x node "${key}" version ${node.version} is below floor 2.1.4`);
+      }
+    }
   });
 });
 
