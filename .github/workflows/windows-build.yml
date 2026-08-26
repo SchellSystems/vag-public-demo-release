@@ -69,6 +69,9 @@ jobs:
         run: npm run build
 
       - name: Gateway smoke
+        env:
+          # The gateway binds 127.0.0.1; prefer IPv4 when the smoke client resolves localhost.
+          NODE_OPTIONS: --dns-result-order=ipv4first
         run: npm run smoke
 
       # --- Packaging ---
