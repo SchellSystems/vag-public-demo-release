@@ -60,6 +60,9 @@ jobs:
       - name: Runtime dependency audit
         run: npm audit --omit=dev
 
+      - name: Build supply chain audit (high/critical blocking)
+        run: npm audit --audit-level=high
+
       - name: Unit tests
         run: npm test
 

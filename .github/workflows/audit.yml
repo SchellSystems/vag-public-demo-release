@@ -56,6 +56,10 @@ jobs:
       - name: Audit runtime dependencies
         run: npm audit --omit=dev
 
+      - name: Audit build supply chain (informational)
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
       - name: Run gateway core unit tests
         run: npm test
 
