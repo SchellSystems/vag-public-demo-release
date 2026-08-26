@@ -41,6 +41,6 @@
   "overrides": {
     "tar": "7.5.22",
     "tmp": "0.2.7",
-    "@electron/packager": "20.0.4"
+    "extract-zip": "npm:@electron-internal/extract-zip@1.0.5"
   }
 }

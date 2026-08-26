@@ -174,6 +174,9 @@ describe('assertLockfileFloors', () => {
         typeof node.version === 'string' && node.version !== '',
         `brace-expansion node "${key}" must have a valid version field`
       );
+      // Validate the full version string before deriving major — throws on malformed input
+      // (e.g. "v1.1.17", ranges, prereleases) so they fail closed rather than silently skip.
+      compareExactVersion(node.version, '0.0.0');
       const major = Number(node.version.split('.')[0]);
       if (major === 1) {
         const cmp = compareExactVersion(node.version, '1.1.18');
@@ -193,6 +196,9 @@ describe('assertLockfileFloors', () => {
         typeof node.version === 'string' && node.version !== '',
         `brace-expansion node "${key}" must have a valid version field`
       );
+      // Validate the full version string before deriving major — throws on malformed input
+      // (e.g. "v1.1.17", ranges, prereleases) so they fail closed rather than silently skip.
+      compareExactVersion(node.version, '0.0.0');
       const major = Number(node.version.split('.')[0]);
       if (major === 2) {
         const cmp = compareExactVersion(node.version, '2.1.4');
@@ -341,42 +347,49 @@ describe('electron packaging security remediation', () => {
     assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
   });
 
-  it('asserts unscoped extract-zip@2.0.1 is absent from lockfile', () => {
-    // extract-zip (unscoped) is unmaintained and vulnerable to CVE-2026-56876.
-    // @electron-internal/extract-zip is a DIFFERENT, safe package and must not be rejected.
+  it('asserts vulnerable extract-zip@2.0.1 is not installed', () => {
+    // Strategy: root overrides alias "extract-zip" -> "npm:@electron-internal/extract-zip@1.0.5"
+    // so any lockfile node for extract-zip must be the safe aliased package, not the unmaintained 2.0.1.
+    // A node may be present (as an alias) but its "name" field must be "@electron-internal/extract-zip".
     const extractZipNodes = Object.entries(lockData.packages).filter(([key]) =>
-      (key === 'node_modules/extract-zip' || key.endsWith('/node_modules/extract-zip'))
+      key === 'node_modules/extract-zip' || key.endsWith('/node_modules/extract-zip')
     );
-    assert.equal(
-      extractZipNodes.length,
-      0,
-      `Vulnerable unscoped extract-zip must not exist in lockfile, found: ${extractZipNodes.map(([k, v]) => `${k}@${v.version}`).join(', ')}`
-    );
+    for (const [key, node] of extractZipNodes) {
+      assert.equal(
+        node.name,
+        '@electron-internal/extract-zip',
+        `extract-zip node at "${key}" must be the @electron-internal/extract-zip alias, got name=${node.name} version=${node.version}`
+      );
+    }
   });
 
-  it('asserts @electron-internal/extract-zip is not accidentally rejected', () => {
-    // This is the safe replacement used by electron itself — it must remain.
+  it('asserts @electron-internal/extract-zip is present (safe scoped package)', () => {
+    // @electron-internal/extract-zip is the scoped safe package used by Electron itself.
     const internalNodes = Object.entries(lockData.packages).filter(([key]) =>
       key === 'node_modules/@electron-internal/extract-zip' ||
       key.endsWith('/node_modules/@electron-internal/extract-zip')
     );
     assert.ok(
       internalNodes.length > 0,
-      '@electron-internal/extract-zip must still be present (safe, distinct package)'
+      '@electron-internal/extract-zip must be present (safe, distinct scoped package)'
     );
   });
 
-  it('asserts resolved @electron/packager is exactly 20.0.4', () => {
-    // Security pin: Forge 7.11.2 declares ^18.3.5 but 18.x retains vulnerable
-    // extract-zip. Override to 20.0.4 removes extract-zip from the packaging chain.
-    // This is a temporary security override pending stable Forge release with safe packager.
-    const packagerNode = lockData.packages['node_modules/@electron/packager'];
-    assert.ok(packagerNode !== undefined, '@electron/packager must exist in lockfile');
-    assert.equal(
-      packagerNode.version,
-      '20.0.4',
-      `@electron/packager must be exactly 20.0.4, got ${packagerNode.version}`
+  it('asserts @electron/packager is Forge-7-compatible 18.x (>= 18.3.5)', () => {
+    // Forge 7.11.2 declares @electron/packager ^18.3.5.
+    // Packager 20.x removed the callback-based hook API that Forge 7 requires, causing
+    // "TypeError: done is not a function" (Windows CI Run #7). Packager 18.4.4 is used.
+    // The extract-zip vulnerability in 18.x is addressed by the root override alias above.
+    const packagerNodes = Object.entries(lockData.packages).filter(([key]) =>
+      key.endsWith('/node_modules/@electron/packager')
     );
+    assert.ok(packagerNodes.length > 0, '@electron/packager must exist in lockfile');
+    for (const [key, node] of packagerNodes) {
+      const cmp = compareExactVersion(node.version, '18.3.5');
+      assert.ok(cmp >= 0, `@electron/packager at "${key}" version ${node.version} is below floor 18.3.5`);
+      const major = Number(node.version.split('.')[0]);
+      assert.equal(major, 18, `@electron/packager at "${key}" must be 18.x (Forge 7 compatible), got ${node.version}`);
+    }
   });
 });
 
