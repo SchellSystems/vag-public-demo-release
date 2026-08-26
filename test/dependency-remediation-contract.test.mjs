@@ -332,6 +332,54 @@ describe('fail-closed behavior', () => {
   });
 });
 
+describe('electron packaging security remediation', () => {
+  let lockData;
+
+  it('reads lockfile for packaging assertions', () => {
+    const raw = readFileSync(LOCKFILE_PATH, 'utf8');
+    lockData = JSON.parse(raw);
+    assert.ok(lockData.packages !== undefined, 'lockfile must have packages key');
+  });
+
+  it('asserts unscoped extract-zip@2.0.1 is absent from lockfile', () => {
+    // extract-zip (unscoped) is unmaintained and vulnerable to CVE-2026-56876.
+    // @electron-internal/extract-zip is a DIFFERENT, safe package and must not be rejected.
+    const extractZipNodes = Object.entries(lockData.packages).filter(([key]) =>
+      (key === 'node_modules/extract-zip' || key.endsWith('/node_modules/extract-zip'))
+    );
+    assert.equal(
+      extractZipNodes.length,
+      0,
+      `Vulnerable unscoped extract-zip must not exist in lockfile, found: ${extractZipNodes.map(([k, v]) => `${k}@${v.version}`).join(', ')}`
+    );
+  });
+
+  it('asserts @electron-internal/extract-zip is not accidentally rejected', () => {
+    // This is the safe replacement used by electron itself — it must remain.
+    const internalNodes = Object.entries(lockData.packages).filter(([key]) =>
+      key === 'node_modules/@electron-internal/extract-zip' ||
+      key.endsWith('/node_modules/@electron-internal/extract-zip')
+    );
+    assert.ok(
+      internalNodes.length > 0,
+      '@electron-internal/extract-zip must still be present (safe, distinct package)'
+    );
+  });
+
+  it('asserts resolved @electron/packager is exactly 20.0.4', () => {
+    // Security pin: Forge 7.11.2 declares ^18.3.5 but 18.x retains vulnerable
+    // extract-zip. Override to 20.0.4 removes extract-zip from the packaging chain.
+    // This is a temporary security override pending stable Forge release with safe packager.
+    const packagerNode = lockData.packages['node_modules/@electron/packager'];
+    assert.ok(packagerNode !== undefined, '@electron/packager must exist in lockfile');
+    assert.equal(
+      packagerNode.version,
+      '20.0.4',
+      `@electron/packager must be exactly 20.0.4, got ${packagerNode.version}`
+    );
+  });
+});
+
 describe('production closure preservation', () => {
   it('production closure is exactly 9 entries with no tar or tmp', () => {
     const raw = readFileSync(LOCKFILE_PATH, 'utf8');
