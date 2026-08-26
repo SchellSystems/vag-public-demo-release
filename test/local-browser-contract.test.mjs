@@ -80,6 +80,26 @@ describe('origin contract — UI constants', () => {
   });
 });
 
+describe('origin contract — gateway smoke harness', () => {
+  const smokeHarness = read('tools/gateway_smoke.mjs');
+
+  it('targets the explicit IPv4 gateway loopback address', () => {
+    assert.match(
+      smokeHarness,
+      /const GATEWAY_URL = 'http:\/\/127\.0\.0\.1:4400';/,
+      'gateway smoke must target the same explicit IPv4 loopback address as the gateway',
+    );
+  });
+
+  it('does not target localhost for the gateway smoke path', () => {
+    assert.equal(
+      smokeHarness.includes('http://localhost:4400'),
+      false,
+      'gateway smoke must not reintroduce resolver-dependent localhost behavior',
+    );
+  });
+});
+
 describe('origin contract — Vite configuration', () => {
   const viteConfig = read('demo-ui/vite.config.ts');
 
