@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.12.0"
 
       - name: Run claim audit
         run: python tools/check_claims.py .
@@ -55,6 +55,9 @@ jobs:
 
       - name: Audit runtime dependencies
         run: npm audit --omit=dev
+
+      - name: Audit build supply chain
+        run: npm audit --audit-level=high
 
       - name: Run gateway core unit tests
         run: npm test

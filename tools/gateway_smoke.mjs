@@ -13,7 +13,7 @@
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-const GATEWAY_URL = 'http://localhost:4400';
+const GATEWAY_URL = 'http://127.0.0.1:4400';
 const UI_URL = 'http://localhost:5173';
 
 async function waitForServer(url, maxRetries = 20) {

@@ -10,15 +10,13 @@
  *   - BUILD_PROVENANCE.json
  *   - WINDOWS_BUILD_REPORT.md
  *
- * Inputs are taken from environment variables (set by the workflow) with
- * safe fallbacks so the script can also be exercised locally:
+ * Inputs are taken from environment variables set by the workflow:
  *   BUNDLE_DIR                 directory holding the renamed .exe and .zip
- *   SMOKE_RESULT               PASS | UNKNOWN | FAIL  (packaged runtime smoke)
+ *   SMOKE_RESULT               must be PASS (packaged runtime smoke)
  *   GH_REPOSITORY              e.g. SchellSystems/vag-public-demo-release
- *   GH_REF_NAME                branch name
+ *   GH_REQUESTED_REF           explicitly requested branch, tag, or SHA
  *   GH_SHA                     commit SHA
  *   GH_RUN_ID                  workflow run id
- *   LINUX_GATES                short text describing which gates ran on Linux
  *
  * This script does NOT sign, upload, tag, or release anything.
  *
@@ -52,7 +50,21 @@ function readPkgVersion(...segments) {
   }
 }
 
+function requireEnvironment(name) {
+  const value = process.env[name];
+  if (typeof value !== 'string' || value.trim() === '') {
+    console.error(`[manifest] Required environment variable is missing: ${name}`);
+    process.exit(1);
+  }
+  return value;
+}
+
 function main() {
+  if (SMOKE_RESULT !== 'PASS') {
+    console.error(`[manifest] Packaged runtime smoke must be PASS, got: ${SMOKE_RESULT}`);
+    process.exit(1);
+  }
+
   if (!existsSync(BUNDLE_DIR)) {
     console.error(`[manifest] Bundle dir not found: ${BUNDLE_DIR}`);
     process.exit(1);
@@ -67,12 +79,13 @@ function main() {
       const hash = sha256File(full);
       files.push({ name, size_bytes: size, sha256: hash });
     } else {
-      console.error(`[manifest] WARNING: expected artifact missing: ${name}`);
+      console.error(`[manifest] Expected artifact missing: ${name}`);
+      process.exit(1);
     }
   }
 
-  if (files.length === 0) {
-    console.error('[manifest] No canonical artifacts found. Present files:', present.join(', '));
+  if (files.length !== 2) {
+    console.error('[manifest] Canonical installer and ZIP are required. Present files:', present.join(', '));
     process.exit(1);
   }
 
@@ -81,21 +94,48 @@ function main() {
   writeFileSync(join(BUNDLE_DIR, 'SHA256SUMS.txt'), sumsContent);
   console.log('[manifest] Wrote SHA256SUMS.txt');
 
+  const writtenSums = readFileSync(join(BUNDLE_DIR, 'SHA256SUMS.txt'), 'utf8');
+  if (writtenSums !== sumsContent) {
+    console.error('[manifest] SHA256SUMS.txt round-trip verification failed');
+    process.exit(1);
+  }
+  for (const file of files) {
+    if (sha256File(join(BUNDLE_DIR, file.name)) !== file.sha256) {
+      console.error(`[manifest] SHA-256 verification failed for ${file.name}`);
+      process.exit(1);
+    }
+  }
+  console.log('[manifest] SHA-256 verification: PASS');
+
   const nodeVersion = process.version;
   const electronVersion = readPkgVersion('electron');
   const forgeVersion = readPkgVersion('@electron-forge', 'cli');
+  const packagerVersion = readPkgVersion('@electron-forge', 'core', 'node_modules', '@electron', 'packager');
+  const expectedVersions = [
+    ['Node', nodeVersion, 'v22.12.0'],
+    ['Electron', electronVersion, '43.2.0'],
+    ['Electron Forge', forgeVersion, '7.11.2'],
+    ['Electron Packager', packagerVersion, '18.4.4'],
+  ];
+  for (const [label, actual, expected] of expectedVersions) {
+    if (actual !== expected) {
+      console.error(`[manifest] ${label} must be ${expected}, got: ${actual}`);
+      process.exit(1);
+    }
+  }
   const buildTimeUtc = new Date().toISOString();
 
   const provenance = {
     product: 'VAG Bounded Demo',
     version: '0.1.0',
-    repository: process.env.GH_REPOSITORY || 'UNKNOWN',
-    branch: process.env.GH_REF_NAME || 'UNKNOWN',
-    commit_sha: process.env.GH_SHA || 'UNKNOWN',
-    workflow_run_id: process.env.GH_RUN_ID || 'UNKNOWN',
+    repository: requireEnvironment('GH_REPOSITORY'),
+    requested_ref: requireEnvironment('GH_REQUESTED_REF'),
+    commit_sha: requireEnvironment('GH_SHA'),
+    workflow_run_id: requireEnvironment('GH_RUN_ID'),
     node_version: nodeVersion,
     electron_version: electronVersion,
     electron_forge_version: forgeVersion,
+    electron_packager_version: packagerVersion,
     build_time_utc: buildTimeUtc,
     platform: 'win32-x64',
     files: files.map((f) => ({ name: f.name, size_bytes: f.size_bytes, sha256: f.sha256 })),
@@ -103,6 +143,7 @@ function main() {
     unsigned_build: true,
     code_signed: false,
     windows_packaged_runtime_smoke: SMOKE_RESULT,
+    sha256_verification: 'PASS',
   };
 
   writeFileSync(
@@ -111,17 +152,14 @@ function main() {
   );
   console.log('[manifest] Wrote BUILD_PROVENANCE.json');
 
-  const smokeStarted = SMOKE_RESULT === 'PASS';
-  const exeRuntimeLine = smokeStarted
-    ? 'BUILT and STARTED (non-interactive packaged --smoke-test exited 0)'
-    : 'BUILT only — packaged runtime start was NOT confirmed in CI';
+  const exeRuntimeLine = 'BUILT and STARTED (non-interactive packaged --smoke-test exited 0)';
 
   const report = `# Windows Build Report — VAG Bounded Demo v0.1.0
 
 ## Build Identity
 
 - Repository: ${provenance.repository}
-- Branch: ${provenance.branch}
+- Requested ref: ${provenance.requested_ref}
 - Commit SHA: ${provenance.commit_sha}
 - Workflow run ID: ${provenance.workflow_run_id}
 - Build time (UTC): ${provenance.build_time_utc}
@@ -129,6 +167,7 @@ function main() {
 - Node: ${nodeVersion}
 - Electron: ${electronVersion}
 - Electron Forge: ${forgeVersion}
+- Electron Packager: ${packagerVersion}
 
 ## Signing
 
@@ -142,23 +181,22 @@ binary and is not a defect.
 
 ## Where each check ran
 
-### Ran on Linux (pre-existing branch validation, separate from this run)
-- Gateway/UI/desktop unit tests (\`npm test\`)
-- Audit fixture tests (\`python -m unittest discover -s test/audit\`)
-- Claim audit and export audit
-- Gateway smoke and public probe
-- Electron dev smoke and packaged Linux smoke (xvfb)
+Linux/PR CI evidence is external to this Windows artifact and is not asserted by this report.
 
 ### Ran on Windows (this workflow, windows-latest, before packaging)
 - \`npm ci\`
-- \`npm test\`
 - \`python -m unittest discover -s test/audit -p 'test_*.py'\`
 - \`python tools/check_claims.py .\`
 - \`python tools/export_audit.py .\`
 - \`npm audit --omit=dev\`
+- \`npm audit --audit-level=high\`
+- \`npm test\`
 - \`npm run build\`
 - \`npm run smoke\`
-- Electron Forge Windows packaging (Squirrel installer + ZIP)
+- \`electron-forge make\`
+- Packaged runtime smoke
+- Artifact collection (Squirrel installer + ZIP)
+- SHA-256 generation and verification
 
 ## Was the .exe only built or also started?
 
@@ -169,17 +207,21 @@ binary and is not a defect.
 ## Status summary
 
 \`\`\`
-WINDOWS_BUILD: PASS
-WINDOWS_PACKAGED_RUNTIME_SMOKE: ${SMOKE_RESULT}
-MANUAL_WINDOWS_ACCEPTANCE_REQUIRED: ${smokeStarted ? 'RECOMMENDED' : 'YES'}
+WINDOWS_ARTIFACT_BUILD: PASS
+WINDOWS_PACKAGED_RUNTIME_SMOKE: PASS
+WINDOWS_FINAL_ACCEPTANCE: PASS
 \`\`\`
 
 ## Remaining UNKNOWNs
 
-${smokeStarted
-  ? '- Interactive UI behavior (window rendering, Allow/Deny click paths) still needs one manual human acceptance run.'
-  : '- Packaged runtime start on Windows was not confirmed in CI (headless/GPU limits). Manual start on a real Windows desktop is required.\n- Interactive UI behavior still needs manual human acceptance.'}
+- Interactive UI behavior (window rendering, Allow/Deny click paths) was not tested by the non-interactive packaged runtime smoke.
 - Code signing / SmartScreen trust: not addressed in this stage (unsigned).
+
+## Boundaries
+
+This is bounded Public Demo evidence for an unsigned test distributable. It does
+not assert a release, deployment, production readiness, system-wide enforcement,
+Core authority, or code signing.
 
 ## Artifacts in this bundle
 

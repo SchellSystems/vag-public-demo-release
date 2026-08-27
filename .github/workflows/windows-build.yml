@@ -10,7 +10,6 @@ on:
       ref:
         description: "Branch, tag, or commit SHA to build"
         required: true
-        default: desktop-electron-finish
 
 permissions:
   contents: read
@@ -34,10 +33,10 @@ jobs:
           "BUILD_COMMIT_SHA=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Host "Checked-out commit: $sha"
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 22.12.0
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.12.0"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -59,6 +58,9 @@ jobs:
 
       - name: Runtime dependency audit
         run: npm audit --omit=dev
+
+      - name: Build supply chain audit (high/critical blocking)
+        run: npm audit --audit-level=high
 
       - name: Unit tests
         run: npm test
@@ -98,36 +100,30 @@ jobs:
 
           Get-ChildItem $bundle
 
-      # --- Non-interactive packaged runtime smoke (best-effort) ---
-      - name: Packaged runtime smoke (best-effort)
+      # --- Non-interactive packaged runtime smoke (blocking) ---
+      - name: Packaged runtime smoke (blocking)
         id: smoke
         shell: pwsh
-        continue-on-error: true
         run: |
-          $ErrorActionPreference = "Continue"
+          $ErrorActionPreference = "Stop"
           $exe = Get-ChildItem -Path "out" -Recurse -Filter "VAGBoundedDemo.exe" |
                  Where-Object { $_.FullName -notmatch "squirrel" } |
                  Select-Object -First 1
           if ($null -eq $exe) {
-            Write-Host "Packaged exe not found for smoke"
-            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
+            throw "Packaged exe not found for smoke"
           }
           Write-Host "Running packaged smoke: $($exe.FullName) --smoke-test"
           $p = Start-Process -FilePath $exe.FullName -ArgumentList "--smoke-test" -PassThru -NoNewWindow
           $exited = $p.WaitForExit(60000)
           if (-not $exited) {
-            Write-Host "Smoke timed out"
             try { $p.Kill() } catch {}
-            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
+            throw "Packaged runtime smoke timed out after 60 seconds"
           }
           Write-Host "Smoke exit code: $($p.ExitCode)"
-          if ($p.ExitCode -eq 0) {
-            "result=PASS" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          } else {
-            "result=UNKNOWN" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          if ($p.ExitCode -ne 0) {
+            throw "Packaged runtime smoke exited non-zero: $($p.ExitCode)"
           }
+          "result=PASS" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       # --- Manifest, provenance, report ---
       - name: Generate manifest, provenance, and report
@@ -136,7 +132,7 @@ jobs:
           BUNDLE_DIR: ${{ github.workspace }}/artifact-bundle
           SMOKE_RESULT: ${{ steps.smoke.outputs.result }}
           GH_REPOSITORY: ${{ github.repository }}
-          GH_REF_NAME: ${{ github.event.inputs.ref }}
+          GH_REQUESTED_REF: ${{ github.event.inputs.ref }}
           GH_SHA: ${{ env.BUILD_COMMIT_SHA }}
           GH_RUN_ID: ${{ github.run_id }}
         run: node tools/windows_artifact_manifest.mjs
